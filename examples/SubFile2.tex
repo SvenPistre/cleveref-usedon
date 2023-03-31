@@ -1,0 +1,13 @@
+% !TEX root = ./example.tex
+
+\subsection{Yet another subsection}
+Here is yet another theorem.
+\begin{theorem}
+\label{thm:TestTheoremSecond}
+All rational numbers are real numbers.
+\end{theorem}
+
+Here, \cref{thm:TestTheoremSecond} has \emph{not} been called with \verb|UsedOn|. This is just the standard behaviour of the original \verb|cleveref| package.
+
+\clearpage
+Just for the fun of it, let's call \cref[UsedOn]{thm:TestTheorem,lemma:TestLemma} again with option \verb|UsedOn|.

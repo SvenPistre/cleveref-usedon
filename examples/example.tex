@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsthm}			%AMS theorems
+\usepackage{mathtools}			%AMSmath++ facilities
+\usepackage{thmtools}			%better theorem editing interface
+
+\usepackage{lipsum} 			%dummy text
+
+\usepackage{hyperref}
+%=========================================
+\usepackage[capitalise]{../cleveref-usedon}	
+% If you have installed the package to a directory that latex understands, you can also do
+% \usepackage[capitalise]{cleveref-usedon}
+% This is a custom package, written by Sven Pistre.
+% It patches cleveref and adds `UsedOn' functionality, see example below.
+% Needs to be loaded AFTER hyperref because both hyperref and cleveref 
+% update \label at the hook \AtBeginDocument and we want to use 
+% cleveref's \label.
+% For the various options of cleveref, check the cleveref documentation
+% Here, we call it with option `capitalise'.
+
+\crefname{page}{page}{pages}		% do NOT capitalise pages for more visual appeal
+
+% The theorem editing interface, in particular, \declaretheorem needs to be executed 
+% AFTER loading cleveref with the additional refname and Refname options
+% see https://tex.stackexchange.com/a/498242/267438
+% and the thmtools documentation
+\declaretheorem[	numberwithin=section,
+				name=Theorem,
+				refname={Theorem,Theorems},
+				Refname={Theorem,Theorems}]{theorem}
+\declaretheorem[	sibling=theorem,
+				name=Lemma,
+				refname={Lemma,Lemmas},
+				Refname={Lemma,Lemmas}]{lemma}
+			
+\begin{document}
+\include{SubFile1.tex}
+\include{SubFile2.tex}
+\end{document}

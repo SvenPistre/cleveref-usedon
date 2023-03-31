@@ -1,0 +1,77 @@
+% !TEX root = ./example.tex
+
+\section{The `cleveref-usedon' package}
+\label{sec:TestSection}
+
+This package patches a bug in the \verb|cleveref| package and adds the following functionality. If an environment, i.e. a theorem environment, has been labelled, it can be called with both \verb|\cref{<LabelName>}| as well as
+\begin{quote}
+\begin{verbatim}
+	\cref[UsedOn]{<LabelName>}
+	\cref[uo]{<LabelName>}
+\end{verbatim}
+\end{quote}
+The option \verb|UsedOn| or the short form \verb|uo| is case-insensitive, i.e. you could also call it via
+\begin{quote}
+\begin{verbatim}
+	\cref[UsEdOn]{<LabelName>}
+	\cref[uO]{<LabelName>}
+\end{verbatim}
+\end{quote}
+--- but why would you?
+This additional option adds the text \emph{Used on page(s) ... .)} to the beginning of the environment where the label has been originally set. If \verb|hyperref| has been loaded, there will also be hyperlinks to the corresponding pages from where the label has been referenced.
+
+This might be a useful feature if you are writing a textbook or longer thesis and include various results early on but it is not yet clear why they are useful. 
+Hopefully, the promise that this result 'is used on page...' will prompt your reader to keep reading.
+Check the package documentation for more infos.
+
+\subsection{An example}
+
+\begin{theorem}
+\label{thm:TestTheorem}
+The identity
+\begin{equation*}
+	1=1
+\end{equation*}
+is true.
+\end{theorem}
+
+\begin{lemma}
+\label{lemma:TestLemma}
+The identity
+\begin{equation*}
+	2=2.
+\end{equation*}
+is also true.
+\end{lemma}
+
+\par
+Here, we reference \cref[UsedOn]{thm:TestTheorem} with option \verb|UsedOn|.
+
+Here, we reference \cref[uo]{lemma:TestLemma} with option \verb|uo|.
+\\
+
+\subsection{Dummy text}
+This is just some dummy text to generate pages.
+
+\lipsum[1-5]
+\clearpage
+
+\subsection{Continuation of example}
+\par	
+Here, we have referenced both \cref[uo]{thm:TestTheorem,lemma:TestLemma} and called them in one environment with option \verb|uo|. 
+Note the lack of spaces in the braced arguments of \verb|\cref|! This is important as there will be a \LaTeX error when multiple labels are separated by commas AND spaces, i.e. it should be \\
+\verb|\cref[uo]\{thm:TestTheorem,lemma:TestLemma\}|
+\\
+and NOT \\
+\verb|\cref[uo]\{thm:TestTheorem, lemma:TestLemma\}|.
+Check the documentation of the \verb|cleveref| package!	\\
+
+The pdf goes on for a few more pages! Don't stop!
+\clearpage
+\par	
+\Cref[UsedOn]{thm:TestTheorem} can also be called with option \verb|UsedOn| at the beginning of a sentence. One should then use \verb|\Cref| instead of \verb|\ref|. \\
+\par	
+\Cref[UsedOn]{lemma:TestLemma} can be similarly called at the beginning of a sentence with option \verb|UsedOn|. \\
+
+\clearpage
+\par	\Cref[UsedOn]{thm:TestTheorem,lemma:TestLemma} are here called again in one single call of \verb|\Cref| with option \verb|UsedOn|.
