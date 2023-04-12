@@ -22,6 +22,14 @@ printed to the header of Lemma 1.12.
 
 Check the [package documentation](https://github.com/SvenPistre/cleveref-usedon/blob/main/cleveref-usedon.pdf) for more info on the usage or look at an [example](https://github.com/SvenPistre/cleveref-usedon/tree/main/examples) directly.
 
+## Installation
+Place the file ``cleveref-usedon.sty`` at a location which your LaTeX distribution understands. For instance, on OS X you can place it in ``~/Library/texmf/tex/latex``.
+If you don't know where that would be on your OS, you can also simply drop this file in the same directory as the ``.tex`` file where you want to use the package.
+
+If you wish you can also 'compile' the package style file ``cleveref-usedon.sty`` and the documentation ``cleveref-usedon.pdf`` 'from source' as follows:
+- To generate the package style file, run the installation file ``cleveref-usedon.ins`` through pdflatex. 
+- To generate the documentation, run the DocStrip file ``cleveref-usedon.dtx`` through pdflatex. 
+
 ---
 Copyright (C) 2023  Sven Pistre
 ```
