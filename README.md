@@ -20,7 +20,7 @@ This is what the package **cleveref-usedon** tries to address.
 The info message *"Used on p. 40, 43-45 and 101."* would then be
 printed to the header of Lemma 1.12.
 
-Check the [package documentation](https://github.com/SvenPistre/cleveref-usedon/blob/main/cleveref-usedon.pdf) for more info on the usage or look at an [example](https://github.com/SvenPistre/cleveref-usedon/tree/main/examples) directly.
+Check the [package documentation](./cleveref-usedon.pdf) for more info on the usage or look at an [example](./examples) directly.
 
 ## Installation
 Place the file ``cleveref-usedon.sty`` at a location which your LaTeX distribution understands. For instance, on OS X you can place it in ``~/Library/texmf/tex/latex``.
