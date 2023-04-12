@@ -32,6 +32,8 @@ If you wish you can also 'compile' the package style file ``cleveref-usedon.sty`
 
 ---
 Copyright (C) 2023  Sven Pistre
+
+E-mail:   [cleveref-usedon@sven-pistre.com](mailto:cleveref-usedon@sven-pistre.com?subject=[[cleveref-usedon]])
 ```
 Files:
 cleveref.ins  Batch file, run through LaTeX
