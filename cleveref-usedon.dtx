@@ -1,5 +1,5 @@
-\def\packageversion{0.2.0}
-\def\packagedate{2023-04-07}
+\def\packageversion{0.3.0}
+\def\packagedate{2023-04-18}
 % \iffalse meta-comment
 %
 % Package `cleveref-usedon' to use with LaTeX2e
@@ -44,12 +44,21 @@
 %
 %<*driver>
 \documentclass{ltxdoc}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
 \usepackage{thmtools}
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref-usedon}[2023/03/29]
 \declaretheorem[
 	numberwithin=section, 
 	name=Theorem]{theorem}
+\declaretheorem[
+	sibling=theorem,
+	name=Lemma]{lemma}
+\declaretheorem[
+	sibling=theorem,
+	name=Corollary]{corollary}
 \crefname{page}{page}{pages}	% do NOT capitalise pages for more visual appeal
 \EnableCrossrefs
 \CodelineIndex
@@ -62,7 +71,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{160}
+% \CheckSum{231}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -86,8 +95,14 @@
 % \changes{v0.2.0}{2023-04-07}{%
 %     Manually \texttt{\textbackslash{}Require}'d the packages \pkg{expl3} and \pkg{xparse}%
 %     for users of older \LaTeX{} installations.%
-%     Added \texttt{@}-guards to the macros \texttt{\textbackslash{}origlabel},%
+%     Added \texttt{\_\_UsedOn\_}-guards to the macros \texttt{\textbackslash{}origlabel},%
 %     \texttt{\textbackslash{}origcref}, and \texttt{\textbackslash{}origCref} to prevent them from leaking.%
+% }
+% \changes{v0.3.0}{2023-04-18}{%
+%     Added the options \texttt{UsedBy} and \texttt{UsedByAndOn} upon request of
+%     \href{https://people.math.umass.edu/~murray/}{Murray Eisenberg}. Thank you for this input.
+%     For now these options remain experimental because you need to use proof environments in an unusual way,
+%     see \cref{sec:UsedByAndOn}.
 % }
 %
 % \GetFileInfo{cleveref-usedon.dtx}
@@ -108,7 +123,7 @@
 %	Any label can be referenced with the new optional argument ``|UsedOn|'' 
 %	passed to |\cref|. Doing so, will print an info message at the original label 
 %	location (in a theorem environment, say) which reads 
-%	``\emph{Used on pages \meta{pagerange}.}''.
+%	``\emph{Used on pages \meta{list of pages}.}''.
 %	This functionality is complementary to \pkg{hyperref}'s |pagebackref|
 %	or \pkg{biblatex}'s |backref| option for the bibliography.
 %	It might be useful for authors of longer texts such as textbooks or theses, 
@@ -138,7 +153,7 @@
 %		|\label{thm:SqrtTwoIrrational}|.
 %	\end{quote}
 %	\begin{theorem}	\label{thm:SqrtTwoIrrational}
-%	The number $\sqrt{2}$ is irrational.
+%	    The number $\sqrt{2}$ is irrational.
 %	\end{theorem}
 %	Now we can reference this theorem via
 %	\begin{quote}
@@ -154,8 +169,7 @@
 %	\end{quote}
 %	Note that the current page number \thepage{} is not included in the list of 
 %	page references in the header of \cref{thm:SqrtTwoIrrational}.
-%	
-%	
+%
 %	\section{Usage}
 %	\label{sec:usage}
 %	The \pkg{cleveref-usedon} package uses \pkg{cleveref v0.21.4}
@@ -174,34 +188,139 @@
 %	
 %	\DescribeMacro{\cref}
 %	\DescribeMacro{\Cref}
-%	|\cref|\oarg{UsedOn}\marg{LabelName}	\\
-%	The |\cref| macro can be called with option |UsedOn| or the short form 
-%	|uo|. This is case-insensitive, i.e. you could also write 
+%	|\cref|\oarg{Option}\marg{LabelName}	\\
+%	The |\cref| macro can be called with options |UsedOn| (see \cref{sec:UsedOn}),
+%   |UsedBy| (experimental, see \cref{sec:UsedByAndOn}) and |UsedByAndOn| (experimental, see \cref{sec:UsedByAndOn})
+%   or their short forms |uo|, |ub|, |ubao|.
+%   This is case-insensitive, i.e. you could also write\footnote{But why would you want to?}
 %	\begin{quote}
-%		|\cref[UsEdOn]|\marg{LabelName}	\\
-%		|\cref[uO]|\marg{LabelName}
+%		|\cref[UsEdOn]|\marg{LabelName},	\\
+%		|\cref[uO]|\marg{LabelName}.
 %	\end{quote}
-%	--- but why would you?
-%	
-%	This additional option adds the text ``\emph{(Used on page(s) ... .)}'' 
-%	with an additional line break right after where the label has been originally 
-%	set. If \pkg{hyperref} has been loaded, there will also be hyperlinks
+%	The package \pkg{cleveref-usedon} is implemented using the \LaTeX3 programming layer |expl3|.
+%	If you are interested, I have spent some time to document and comment
+%	on the implementation in \cref{sec:implementation}.
+%   On an abstract level the implementation is as follows:
+%   Whenever the label \meta{LabelName} gets
+%   referenced with one of the options at some location via |\cref|\oarg{Option}\marg{LabelName},
+%   an additional auxiliary label is created at
+%   this very location. This auxiliary label has the form \meta{Option}@\meta{LabelName}@\meta{Counter}
+%   where \meta{Counter} is an integer that counts how often the label \meta{LabelName} has
+%   been referenced with \meta{Option}. At the end of the \LaTeX{} run, the final value of this counter
+%   is written to the .aux file as a key-value pair:
+%   \begin{quote}
+%       \meta{Option}@\meta{LabelName} = \meta{MaxCounter}
+%   \end{quote}
+%   In the second \LaTeX{} run, we read this counter from the .aux file.
+%   Then, at the original location of the referenced label \meta{LabelName}, we can now pass
+%   the list of auxiliary labels
+%   \begin{quote}
+%       \meta{Option}@\meta{LabelName}@1, ..., \meta{Option}@\meta{LabelName}@\meta{MaxCounter}
+%   \end{quote}
+%   to |\cpageref| (and |\cref| for the experimental options) and write the forward-referencing info message.
+%
+%   \subsection{The option \oarg{UsedOn}}
+%   \label{sec:UsedOn}
+%	\DescribeMacro{UsedOn}
+%	This option adds the message
+%   \begin{quote}
+%       \emph{(Used on page(s) \meta{list of page(s)}.)}
+%   \end{quote}
+%   The text is followed by a line break
+%   and is set after the original location of the referenced label \meta{LabelName}.
+%   If \pkg{hyperref} has been loaded, there will also be hyperlinks
 %	to the corresponding pages from where the label has been referenced.
 %	
-%	If the original label has been set in a theorem-style environment such as 
+%	If the original label has been set in a theorem-like environment such as
 %	\begin{quote}
 %	\begin{verbatim}
-%		\begin{theorem}	\label{thm:SqrtTwoIrrational}
-%		    The number $\sqrt{2}$ is irrational.
-%		\end{theorem}
+%	\begin{theorem}   \label{thm:SqrtTwoIrrational}
+%	    The number $\sqrt{2}$ is irrational.
+%	\end{theorem}
 %	\end{verbatim}
 %	\end{quote}
-%	then the info message is printed in the header of this theorem-style 
+%	then the info message is printed in the header of this theorem-like
 %	environment. The same functionality can be used for |\Cref|.
-%	
-%	The package \pkg{cleveref-usedon} is implemented using |expl3|.
-%	If you are interested, I have spent some time to document and comment 
-%	on the implementation in \cref{sec:implementation}.
+%
+%   \subsection{The experimental options \oarg{UsedBy} and \oarg{UsedByAndOn}}
+%   \label{sec:UsedByAndOn}
+%	\DescribeMacro{UsedBy}
+%   \DescribeMacro{UsedByAndOn}
+%	The option \oarg{UsedBy} adds the message
+%   \begin{quote}
+%       \emph{(Used by \meta{list of theorem-like destination(s)}.)}
+%   \end{quote}
+%	The option \oarg{UsedByAndOn} adds the message
+%   \begin{quote}
+%       \emph{(Used by \meta{list of theorem-like destination(s)} on page(s) \meta{list of page(s)}.)}
+%   \end{quote}
+%   Each text is followed by a line break
+%   and is set after the original location of the referenced label \meta{LabelName}.
+%   If \pkg{hyperref} has been loaded, there will also be hyperlinks to the destinations.
+%
+%   For example, suppose we have the following lemma.
+%	\begin{lemma}	\label{lemma:SmoothFunction}
+%	    Any smooth function $f\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%	\end{lemma}
+%   And we will use it in the proof of the following result.
+%	\begin{corollary}	\label{cor:DerivativeContinuous}
+%	    Suppose $f\colon \mathbb{R}\to \mathbb{R}$ is smooth.
+%	    The derivative $f^{\prime}\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%   \begin{proof}
+%       The derivative of a smooth map is itself smooth.
+%       Hence, the claim follows by \cref[UsedBy]{lemma:SmoothFunction}.
+%   \end{proof}
+%	\end{corollary}
+%   The previous result will in turn be used in the proof of the next one.
+%	\begin{corollary}	\label{cor:AllDerivativesContinuous}
+%	    Suppose $f\colon \mathbb{R}\to \mathbb{R}$ is smooth and $k\in\mathbb{N}$.
+%	    The $k$th derivative $f^{(k)}\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%   \begin{proof}
+%       This follows from \cref[UsedByAndOn]{cor:DerivativeContinuous} by induction.
+%   \end{proof}
+%	\end{corollary}
+%   The code for the above examples is as follows:
+%	\begin{quote}
+%	\begin{verbatim}
+%	\begin{lemma}	\label{lemma:SmoothFunction}
+%	    Any smooth function $f\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%	\end{lemma}
+%
+%	\begin{corollary}   \label{cor:DerivativeContinuous}
+%	    Suppose $f\colon \mathbb{R}\to \mathbb{R}$ is smooth.
+%	    The derivative $f^{\prime}\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%	\begin{proof}
+%	    The derivative of a smooth map is itself smooth.
+%	    Hence, the claim follows by \cref[UsedBy]{lemma:SmoothFunction}.
+%	\end{proof}
+%	\end{corollary}
+%
+%	\begin{corollary}   \label{cor:AllDerivativesContinuous}
+%	    Suppose $f\colon \mathbb{R}\to \mathbb{R}$ is smooth and $k\in\mathbb{N}$.
+%	    The $k$th derivative $f^{(k)}\colon \mathbb{R}\to \mathbb{R}$ is continuous.
+%	\begin{proof}
+%	    This follows from \cref[UsedByAndOn]{cor:DerivativeContinuous} by induction.
+%	\end{proof}
+%	\end{corollary}
+%   \end{verbatim}
+%	\end{quote}
+%   Unfortunately, due the way how this package is currently implemented, to get these
+%   experimental options to work it is necessary to abuse the usage of proof environments.
+%   Namely, one needs to nest the proof environment \emph{inside} the theorem-like environment.
+%   Note carefully how the proof environments are (ab)used in the above code example.
+%
+%   This is -- as far is I know -- not how these environments are supposed to be used.
+%   In particular, placing text between theorem-like environment and the corresponding proof,
+%   as is often common, will result in a wrong reference. Namely, instead of referencing the
+%   theorem-like environment by name only the corresponding section name would be printed, e.g.
+%   ``\emph{Used by \cref{sec:UsedByAndOn}.}''.
+%   You can see this for yourself, if you move the proof environment out of the theorem-like
+%   environment in the above examples.
+%   Hence, using proof environments correctly results in messages which are less helpful to the reader.
+%   On the other hand, using this experimental functionality to help the reader forces users (i.e. authors)
+%   of this package to use proof environments incorrectly.
+%   This sounds like a No-Free-Lunch theorem...
+%   Therefore, use these two experimental options at your own discretion!
 %
 %	\section{Hints and tips}
 %	\label{sec:tips}
@@ -212,29 +331,55 @@
 %	\end{quote}
 %	in your document's preamble, after loading \pkg{cleveref-usedon}.
 %
-%	It is recommended to not use the optional argument for equation-style 
-%	environments such as \cref[UsedOn]{eq:Stokes} because otherwise the 
-%	info message will --- unhelpfully --- be printed inside the equation 
-%	environment, like so:
+%	It is recommended to not use the optional arguments for equation-like
+%	environments such as \cref[UsedOn]{eq:Stokes} because sometimes\footnote{I haven't quite tracked down this bug.}
+%   the info message will --- unhelpfully --- be printed inside the equation
+%	environment, like so (this might or might not%
+%   \footnote{In version 0.2.0 of this package, the text ``\emph{Used on page 2.}''
+%   was printed right after the formula in the equation environment.}
+%   show undesired behaviour):
 %	\begin{equation}
 %		\int_{M}\mathrm{d}\omega	=\int_{\partial M}\omega.	\label{eq:Stokes}
 %	\end{equation}
-%	So, for now, one should use this functionality only for theorem-style 
-%	environments such as theorems, lemmas and maybe exercises.
+%	So, one should use this functionality only for theorem-like
+%	environments such as theorems, lemmas and exercises etc.
 %
-%	\subsection{Editing the info message}
+%   If one references the same label multiple times but with different options, say |UsedOn| and |UsedBy|,
+%   then \emph{both} info messages are printed after the original label location.
+%   This is not how this functionality was intended and you shouldn't use it like that.
+%   I am not going to implement a check which various combinations of these options are used for the same label.
+%
+%	\subsection{Editing the info messages}
 %	\label{subsec:edit_info_msg}
 %	\DescribeMacro{\UsedOnMessage}
-%	|\UsedOnMessage|\marg{PageNumberList from cpageref}	\\
-%	The standard message which gets printed to the first line of the labelled 
-%	environment is ``\textit{(Used on \meta{PageNumberList}).}'' --- followed by 
-%	a line break --- where \meta{PageNumberList} is generated automatically 
-%	by \pkg{cleveref} via |\cpageref|.
-%	You can change this behaviour by redefining the macro |\UsedOnMessage|, e.g. as
+%	\DescribeMacro{\UsedByMessage}
+%	\DescribeMacro{\UsedByAndOnMessage}
+%	|\UsedOnMessage|\marg{PageList from cpageref}	\\
+%	|\UsedByMessage|\marg{EnvironmentList from cref}	\\
+%	|\UsedByAndOnMessage|\marg{EnvironmentList from cref}\marg{PageList from cpageref}	\\
+%	The standard messages which get printed to the first line of the labelled
+%	environment are
+%   \begin{quote}
+%       \emph{(Used on \meta{PageList}.)},   \\
+%       \emph{(Used by \meta{EnvironmentList}.)},    \\
+%       \emph{(Used by \meta{EnvironmentList}) on \meta{PageList}.)},
+%   \end{quote}
+%   respectively
+%   --- followed by a line break --- where \meta{PageList} is generated internally
+%	by \pkg{cleveref} via |\cpageref| and \meta{EnvironmentList} is generated internally
+%	by \pkg{cleveref} via |\cref|.
+%	You can change these behaviours by redefining the macros |\UsedOnMessage|, |\UsedByMessage|
+%   and |\UsedByAndOnMessage|, e.g. as
 %	\begin{quote}
 %	\begin{verbatim}
-%		\RenewDocumentCommand{\UsedOnMessage}{m}{
+%		\RenewDocumentCommand{\UsedOnMessage}{ m }{
 %		    \emph{(Will be cited on #1.)}	\\
+%		}
+%		\RenewDocumentCommand{\UsedByMessage}{ m }{
+%		    \emph{(Will be applied in #1.)}	\\
+%		}
+%		\RenewDocumentCommand{\UsedByAndOnMessage}{ m m }{
+%		    \emph{(Will be applied in #1 on #2.)}	\\
 %		}
 %	\end{verbatim}
 %	\end{quote}
@@ -251,11 +396,10 @@
 %	
 %	\section{Future features}
 %	\label{sec:future}
-%	It is planned to include a package option that turns on the |UsedOn| 
-%	option for \emph{all} |\cref|'s calls. Additionally, a switch package option 
-%	might be included which reverses the standard behaviour, i.e. if one does 
-%	not want to use |UsedOn| functionality one needs to explicitly use 
-%	|\cref[NotUsedOn]|\marg{LabelName}. \\
+%   For all feature requests, either
+%   \href{https://github.com/SvenPistre/cleveref-usedon/issues}{create a github issue} or
+%   \href{mailto:cleveref-usedon@sven-pistre.com?subject=[cleveref-usedon]}{send me an email}.
+%
 %	Let's just reference \cref[UsedOn]{thm:SqrtTwoIrrational} one last time for the fun of it, check \cpageref{thm:SqrtTwoIrrational} again to see the effect to the reference list in the header of \cref{thm:SqrtTwoIrrational}.
 %
 % \StopEventually{}
@@ -291,7 +435,7 @@
 %    \begin{macrocode}
 \DeclareOption*{
     \PackageInfo{cleveref-usedon}
-        {Passing~to~cleveref:~Option~`\CurrentOption'}
+        {Passing~to~cleveref:~Option~``\CurrentOption''}
     \PassOptionsToPackage{\CurrentOption}{cleveref}
 }
 \ProcessOptions*
@@ -314,17 +458,19 @@
 %
 %   \subsection{Overloading of label and cref}
 %
-%	We need a branching variant of |\str_case:nn| 
-%	which expands the input string token. This will be used to match
+%	We need variants of |\str_case:nn|
+%	which expand the input string token.
+%   This will be used to match
 %	options for the |\__UsedOn_Processor|.
 %
 %    \begin{macrocode}
 \prg_generate_conditional_variant:Nnn \str_case:nn { x } { TF }
+\cs_generate_variant:Nn \str_case:nn { x }
 %    \end{macrocode}
 %
 %\begin{macro}{\g__UsedOn_k_seq}
 %	Let's initialise a global key sequence for those label names that
-%	have been referenced via |[UsedOn]|.
+%	have been referenced via |[UsedOn]|, |[UsedBy]| or |[UsedByAndOn]|.
 %
 %    \begin{macrocode}
 \seq_new:N \g__UsedOn_k_seq
@@ -343,8 +489,9 @@
 %\end{macro}
 %
 %\begin{macro}{\UsedOnMessage}
-%	The following is the standard text that gets printed in the first line
-%	of the labelled environment which later gets referenced with |[UsedOn]|.
+%	The following are the standard texts that get printed in the first line
+%	of the labelled environment which later gets referenced with
+%   |[UsedOn]|, |[UsedBy]| or |[UsedByAndOn]|.
 %
 %    \begin{macrocode}
 \NewDocumentCommand{\UsedOnMessage}{m}{
@@ -352,28 +499,44 @@
 }
 %    \end{macrocode}
 %\end{macro}
+%\begin{macro}{\UsedByMessage}
+%    \begin{macrocode}
+\NewDocumentCommand{\UsedByMessage}{ m }{
+    \emph{(Used~by~#1.)} \\
+}
+%    \end{macrocode}
+%\end{macro}
+%\begin{macro}{\UsedByAndOnMessage}
+%    \begin{macrocode}
+\NewDocumentCommand{\UsedByAndOnMessage}{ m m }{
+    \emph{(Used~by~#1~on~#2.)} \\
+}
+%    \end{macrocode}
+%\end{macro}
 %
-%\begin{macro}{\__UsedOn_PrintUsedOnLabel}
+%\begin{macro}{\__UsedOn_Printer}
 %	Given a \meta{LabelName}, the following command records all references
-%	via |[UsedOn]| of this label in a temporary comma-separated list
-%	(a |clist| in |expl3| speak). This |clist| is then passed to \pkg{cleveref}'s |cpageref|
-%	and which in turn is passed to |\UsedOnMessage| to be printed after
-%	the original label.
+%	via the optional |cref| argument |[UsedOn]|, |[UsedBy]| or |[UsedByAndOn]|.
+%   They are recorded in a temporary comma-separated list
+%	(a |clist| in |expl3| speak). This |clist| is then passed to \pkg{cleveref}'s
+%   |cpageref| or |cref| which in turn is passed to |\UsedOnMessage|, |\UsedByMessage|
+%   or |\UsedByAndOnMessage| to be printed after the original label.
 %
 %    \begin{macrocode}
-\NewDocumentCommand{\__UsedOn_PrintUsedOnLabel}{ m }{%
+\NewDocumentCommand{\__UsedOn_Printer}{ m m }{%
 %    \end{macrocode}
 %	First, we will check if the reference |UsedOn@|\meta{LabelName}|@1|
 %	exists. Here, the |@1| means that \meta{LabelName} has been referenced
 %	with option |[UsedOn]| at least once. If this reference does not exist,
 %	nothing happens.
 %\iffalse
-%%    % Check if the reference UsedOn@<LabelName>@1 exists
+%%    % Check if the reference #1@<LabelName>@1 exists
 %%    % Here the @1 means that <LabelName> has been referenced
-%%    % with option `UsedOn' at least once
+%%    % with option #1 at least once where #1 is
+%%    % 'UsedOn', 'UsedBy' or 'UsedByAndOn'
 %\fi
 %    \begin{macrocode}
-    \cs_if_exist:cT {r@UsedOn@#1@1}
+    \cs_if_exist:cT {r@#1@#2@1}
     {
 %    \end{macrocode}
 %	Next, we store all the references of the form
@@ -389,35 +552,56 @@
 %%        % Should/will normally need two consecutive runs of pdflatex
 %\fi
 %    \begin{macrocode}
-        \cs_if_free:cTF {c@LastRun@UsedOn@#1}
+        \cs_if_free:cTF {c@LastRun@#1@#2}
             { \int_set:Nn \l_tmpa_int { 1 } }
-            { \int_set:Nn \l_tmpa_int { \value{LastRun@UsedOn@#1} } }
+            { \int_set:Nn \l_tmpa_int { \value{LastRun@#1@#2} } }
         \int_set:Nn \l_tmpb_int { 1 }
         \int_while_do:nn { \l_tmpb_int <= \l_tmpa_int }
         {
-            \clist_put_right:Nx \l_tmpa_clist { UsedOn@#1@\int_use:N \l_tmpb_int }
+            \clist_put_right:Nx \l_tmpa_clist { #1@#2@\int_use:N \l_tmpb_int }
             \int_incr:N \l_tmpb_int
         }
 %    \end{macrocode}
 %	Finally, we print the message that was set in the macro |\UsedOnMessage|.
 %\iffalse
 %%        % Print `UsedOn` message by calling \cpageref with the parameter clist above
-%%        % Uncomment the next two lines to see the contents of \l_tmpa_clist
-%%        %%   Arguments~of~cpageref~are:
+%%        % Uncomment the next two lines for debugging to see the contents of \l_tmpa_clist
+%%        %%   Arguments~of~cpageref/cref~are:
 %%        %%   \par\clist_use:Nn \l_tmpa_clist {\par}\par
 %\fi
 %    \begin{macrocode}
-        \UsedOnMessage{\cpageref{\l_tmpa_clist}}
+        \str_case:xn { \str_foldcase:n { #1 } }
+        {
+            {usedon}
+                {\UsedOnMessage{\cpageref{\l_tmpa_clist}}}
+            {usedby}
+                {\UsedByMessage{\cref{\l_tmpa_clist}}}
+            {usedbyandon}
+                {\UsedByAndOnMessage{\cref{\l_tmpa_clist}}{\cpageref{\l_tmpa_clist}}}
+        }
     }
+}%
+%    \end{macrocode}
+%\end{macro}
+%
+%\begin{macro}{\__UsedOn_PrintMessage}
+%	This method prints the corresponding |UsedOn| message after the original label.
+%    \begin{macrocode}
+\clist_new:N \g__UsedOn_Options_clist
+\clist_set:Nn \g__UsedOn_Options_clist {UsedOn, UsedBy, UsedByAndOn}
+\NewDocumentCommand{\__UsedOn_PrintMessage}{ m }{%
+    \clist_map_inline:Nn \g__UsedOn_Options_clist
+        { \__UsedOn_Printer{##1}{#1} }
 }%
 %    \end{macrocode}
 %\end{macro}
 %
 %\begin{macro}{\__UsedOn_Processor}
 %	This macro takes an optional argument
-%	(a case-insensitive version of |[UsedOn]| or the shortform |[uo]|)
+%	(a case-insensitive version of the option or its shortform)
 %	and a mandatory argument (a single \marg{LabelName} or a |clist| \{\meta{LabelName1},\meta{LabelName2},\ldots\}).
 %    \begin{macrocode}
+\str_new:N \l__UsedOn_Option_str
 \NewDocumentCommand{\__UsedOn_Processor}{ o m }{%
     \IfValueT{#1}{
 %    \end{macrocode}
@@ -427,17 +611,21 @@
         {
 %    \end{macrocode}
 %\iffalse
-%%            % check if option 'UsedOn' (case-insensitive) was used
-%%            % in one of the following forms
+%%            % check if options 'UsedOn', 'UsedBy' or 'UsedByAndOn'
+%%            % (case-insensitive) were used in one of the following forms
 %\fi
 %    \begin{macrocode}
-            {usedon} {}
-            {uo} {}
+            {usedon} {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
+            {uo}     {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
+            {usedby} {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
+            {ub}     {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
+            {usedbyandon} {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
+            {ubao}        {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
         }
         {
             {
 %    \end{macrocode}
-%	Loop through the (potential) label list in mandatory argument
+%	Loop through the (potential) label list in the mandatory argument
 %	of |\cref| (or |\Cref|) which gets passed as the mandatory argument
 %	of the current macro.
 %\iffalse
@@ -448,10 +636,11 @@
                 \seq_map_inline:Nn \l_tmpa_seq
                 {
 %    \end{macrocode}
-%	If the label has \emph{not} been referenced yet via |[UsedOn]|, create a
-%	counter for the current run |ThisRun@UsedOn@##1|.
+%	If the label has \emph{not} been referenced yet via the option |#1| where |#1| is one of
+%   |[UsedOn]|, |[UsedBy]| or |[UsedByAndOn]|, create a
+%	counter for the current run |ThisRun@<Option>@##1|.
 %	If we are not in the initial run anymore, there should be a counter
-%	|LastRun@UsedOn@##1| which contains the maximal amount this
+%	|LastRun@<Option>@##1| which contains the maximal amount this
 %	specific label has been referenced via |UsedOn|.
 %	If we are in the initial run, we need to create this counter as well.
 %	Then save the label in the global container |\g__UsedOn_k_seq|.
@@ -461,12 +650,16 @@
 %%                    % global container \g__UsedOn_k_seq
 %\fi
 %    \begin{macrocode}
-                    \seq_if_in:NxF \g__UsedOn_k_seq {UsedOn@##1}
+                    \seq_if_in:NxF \g__UsedOn_k_seq
+                        { \str_use:N \l__UsedOn_Option_str @##1}
                     {
-                        \newcounter{ThisRun@UsedOn@##1}
-                        \cs_if_free:cT {c@LastRun@UsedOn@##1}
-                            { \newcounter{LastRun@UsedOn@##1} }
-                        \seq_gput_right:Nx \g__UsedOn_k_seq {UsedOn@##1}
+                        \newcounter{
+                            ThisRun@ \str_use:N \l__UsedOn_Option_str @##1
+                        }
+                        \cs_if_free:cT {c@LastRun@ \str_use:N \l__UsedOn_Option_str @##1}
+                            { \newcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} }
+                        \seq_gput_right:Nx \g__UsedOn_k_seq
+                            { \str_use:N \l__UsedOn_Option_str @##1}
                     }
 %    \end{macrocode}
 %	Increase the counter for the current run by 1 and set the counter
@@ -476,34 +669,41 @@
 %%                    % increase the counters and compare with max counter
 %\fi
 %    \begin{macrocode}
-                    \stepcounter{ThisRun@UsedOn@##1}
-                    \setcounter{LastRun@UsedOn@##1}{%
+                    \stepcounter{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1}
+                    \setcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}{%
                         \fp_eval:n { max(%
-                            \value{ThisRun@UsedOn@##1},%
-                            \value{LastRun@UsedOn@##1} ) }%
+                            \value{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1},%
+                            \value{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} ) }%
                     }
 %    \end{macrocode}
-%	Store the value of the max counter |LastRun@UsedOn@##1| in
+%	Store the value of the max counter |LastRun@<Option>@##1| in
 %	the global container |\g__UsedOn_kv_prop|.
 %\iffalse
 %%                    % store the value in global key-value property list
 %\fi
 %    \begin{macrocode}
                     \prop_gput:Nxx \g__UsedOn_kv_prop
-                        {UsedOn@##1} {\arabic{LastRun@UsedOn@##1}}
+                        { \str_use:N \l__UsedOn_Option_str @##1}
+                        {\arabic{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}}
 %    \end{macrocode}
 %	Now we create a numbered auxiliary label. This label is issued at the
 %	location where we referenced the original label via
 %	|\cref[UsedOn]|\meta{LabelName}.
-%	The new auxiliary label has the prefix |UsedOn@| and
-%	the suffix |@\arabic{ThisRun@UsedOn@##1}|, e.g.
+%	The new auxiliary label has the prefix |UsedOn@|, |UsedBy@| or |UsedByAndOn@| and
+%	the suffix |@\arabic{ThisRun@<Option>@##1}|, e.g.
 %	|UsedOn@thm:Pythagoras@4| if it is the fourth time that we called \\
 %	|\cref[UsedOn]{thm:Pythagoras}|.
 %\iffalse
 %%                    % create a label for the UsedOn reference and number this label
 %\fi
 %    \begin{macrocode}
-                    \__UsedOn_origlabel{UsedOn@##1@\arabic{ThisRun@UsedOn@##1}}
+                    \__UsedOn_origlabel{
+                        \str_use:N\l__UsedOn_Option_str
+                        @##1@
+                        \arabic{ThisRun@
+                            \str_use:N \l__UsedOn_Option_str @##1
+                        }
+                    }
                 }
             }
         }
@@ -521,7 +721,7 @@
                     Spelling~error~\msg_line_context:
                     \\
                     Did~you~mean~to~pass~option\\
-                    'UsedOn'~to~cref~or~Cref?
+                    ``UsedOn''~to~cref~or~Cref?
                 }
             \msg_fatal:nn { cleveref-usedon } { OptionSpellingError }
         }
@@ -621,7 +821,7 @@
     \NewCommandCopy{\__UsedOn_origcref}{\cref}
     \NewCommandCopy{\__UsedOn_origCref}{\Cref}
     \RenewDocumentCommand{\label}{ m }{%
-        \__UsedOn_origlabel{#1}\__UsedOn_PrintUsedOnLabel{#1}
+        \__UsedOn_origlabel{#1}\__UsedOn_PrintMessage{#1}
     }%
     \RenewCommandCopy{\cref}{\__UsedOn_cref}
     \RenewCommandCopy{\Cref}{\__UsedOn_Cref}

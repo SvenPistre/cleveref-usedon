@@ -30,8 +30,8 @@
 %% LaTeX version 2005/12/01 or later.
 %% -----------------------------------------------------------------------
 %% 
-\def\packageversion{0.2.0}
-\def\packagedate{2023-04-07}
+\def\packageversion{0.3.0}
+\def\packagedate{2023-04-18}
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
 \RequirePackage{expl3}
 \ProvidesExplPackage{cleveref-usedon}
@@ -51,7 +51,7 @@
 }
 \DeclareOption*{
     \PackageInfo{cleveref-usedon}
-        {Passing~to~cleveref:~Option~`\CurrentOption'}
+        {Passing~to~cleveref:~Option~``\CurrentOption''}
     \PassOptionsToPackage{\CurrentOption}{cleveref}
 }
 \ProcessOptions*
@@ -63,46 +63,73 @@
 \newcommand*{\@setlabelcpagerefrange}[3]{%
     \@@setcpagerefrange{#1}{#2}{labelcref}{#3}}
 \prg_generate_conditional_variant:Nnn \str_case:nn { x } { TF }
+\cs_generate_variant:Nn \str_case:nn { x }
 \seq_new:N \g__UsedOn_k_seq
 \prop_new:N \g__UsedOn_kv_prop
 \NewDocumentCommand{\UsedOnMessage}{m}{
     \emph{(Used~on~#1.)} \\
 }
-\NewDocumentCommand{\__UsedOn_PrintUsedOnLabel}{ m }{%
-%%    % Check if the reference UsedOn@<LabelName>@1 exists
+\NewDocumentCommand{\UsedByMessage}{ m }{
+    \emph{(Used~by~#1.)} \\
+}
+\NewDocumentCommand{\UsedByAndOnMessage}{ m m }{
+    \emph{(Used~by~#1~on~#2.)} \\
+}
+\NewDocumentCommand{\__UsedOn_Printer}{ m m }{%
+%%    % Check if the reference #1@<LabelName>@1 exists
 %%    % Here the @1 means that <LabelName> has been referenced
-%%    % with option `UsedOn' at least once
-    \cs_if_exist:cT {r@UsedOn@#1@1}
+%%    % with option #1 at least once where #1 is
+%%    % 'UsedOn', 'UsedBy' or 'UsedByAndOn'
+    \cs_if_exist:cT {r@#1@#2@1}
     {
 %%        % In a tmp clist we store all the references of the form
 %%        %    `UsedOn@<LabelName>@<Number>`
 %%        % where Number between 1 and \value{LastRun@UsedOn@<LabelName>}
 %%        % if the latter exists, otherwise until 1
 %%        % Should/will normally need two consecutive runs of pdflatex
-        \cs_if_free:cTF {c@LastRun@UsedOn@#1}
+        \cs_if_free:cTF {c@LastRun@#1@#2}
             { \int_set:Nn \l_tmpa_int { 1 } }
-            { \int_set:Nn \l_tmpa_int { \value{LastRun@UsedOn@#1} } }
+            { \int_set:Nn \l_tmpa_int { \value{LastRun@#1@#2} } }
         \int_set:Nn \l_tmpb_int { 1 }
         \int_while_do:nn { \l_tmpb_int <= \l_tmpa_int }
         {
-            \clist_put_right:Nx \l_tmpa_clist { UsedOn@#1@\int_use:N \l_tmpb_int }
+            \clist_put_right:Nx \l_tmpa_clist { #1@#2@\int_use:N \l_tmpb_int }
             \int_incr:N \l_tmpb_int
         }
 %%        % Print `UsedOn` message by calling \cpageref with the parameter clist above
-%%        % Uncomment the next two lines to see the contents of \l_tmpa_clist
-%%        %%   Arguments~of~cpageref~are:
+%%        % Uncomment the next two lines for debugging to see the contents of \l_tmpa_clist
+%%        %%   Arguments~of~cpageref/cref~are:
 %%        %%   \par\clist_use:Nn \l_tmpa_clist {\par}\par
-        \UsedOnMessage{\cpageref{\l_tmpa_clist}}
+        \str_case:xn { \str_foldcase:n { #1 } }
+        {
+            {usedon}
+                {\UsedOnMessage{\cpageref{\l_tmpa_clist}}}
+            {usedby}
+                {\UsedByMessage{\cref{\l_tmpa_clist}}}
+            {usedbyandon}
+                {\UsedByAndOnMessage{\cref{\l_tmpa_clist}}{\cpageref{\l_tmpa_clist}}}
+        }
     }
 }%
+\clist_new:N \g__UsedOn_Options_clist
+\clist_set:Nn \g__UsedOn_Options_clist {UsedOn, UsedBy, UsedByAndOn}
+\NewDocumentCommand{\__UsedOn_PrintMessage}{ m }{%
+    \clist_map_inline:Nn \g__UsedOn_Options_clist
+        { \__UsedOn_Printer{##1}{#1} }
+}%
+\str_new:N \l__UsedOn_Option_str
 \NewDocumentCommand{\__UsedOn_Processor}{ o m }{%
     \IfValueT{#1}{
         \str_case:xnTF { \str_foldcase:n { #1 } }
         {
-%%            % check if option 'UsedOn' (case-insensitive) was used
-%%            % in one of the following forms
-            {usedon} {}
-            {uo} {}
+%%            % check if options 'UsedOn', 'UsedBy' or 'UsedByAndOn'
+%%            % (case-insensitive) were used in one of the following forms
+            {usedon} {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
+            {uo}     {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
+            {usedby} {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
+            {ub}     {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
+            {usedbyandon} {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
+            {ubao}        {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
         }
         {
             {
@@ -113,25 +140,36 @@
 %%                    % if the label has not been referenced yet,
 %%                    % create a counter for the current and last run and save the label in the
 %%                    % global container \g__UsedOn_k_seq
-                    \seq_if_in:NxF \g__UsedOn_k_seq {UsedOn@##1}
+                    \seq_if_in:NxF \g__UsedOn_k_seq
+                        { \str_use:N \l__UsedOn_Option_str @##1}
                     {
-                        \newcounter{ThisRun@UsedOn@##1}
-                        \cs_if_free:cT {c@LastRun@UsedOn@##1}
-                            { \newcounter{LastRun@UsedOn@##1} }
-                        \seq_gput_right:Nx \g__UsedOn_k_seq {UsedOn@##1}
+                        \newcounter{
+                            ThisRun@ \str_use:N \l__UsedOn_Option_str @##1
+                        }
+                        \cs_if_free:cT {c@LastRun@ \str_use:N \l__UsedOn_Option_str @##1}
+                            { \newcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} }
+                        \seq_gput_right:Nx \g__UsedOn_k_seq
+                            { \str_use:N \l__UsedOn_Option_str @##1}
                     }
 %%                    % increase the counters and compare with max counter
-                    \stepcounter{ThisRun@UsedOn@##1}
-                    \setcounter{LastRun@UsedOn@##1}{%
+                    \stepcounter{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1}
+                    \setcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}{%
                         \fp_eval:n { max(%
-                            \value{ThisRun@UsedOn@##1},%
-                            \value{LastRun@UsedOn@##1} ) }%
+                            \value{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1},%
+                            \value{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} ) }%
                     }
 %%                    % store the value in global key-value property list
                     \prop_gput:Nxx \g__UsedOn_kv_prop
-                        {UsedOn@##1} {\arabic{LastRun@UsedOn@##1}}
+                        { \str_use:N \l__UsedOn_Option_str @##1}
+                        {\arabic{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}}
 %%                    % create a label for the UsedOn reference and number this label
-                    \__UsedOn_origlabel{UsedOn@##1@\arabic{ThisRun@UsedOn@##1}}
+                    \__UsedOn_origlabel{
+                        \str_use:N\l__UsedOn_Option_str
+                        @##1@
+                        \arabic{ThisRun@
+                            \str_use:N \l__UsedOn_Option_str @##1
+                        }
+                    }
                 }
             }
         }
@@ -143,7 +181,7 @@
                     Spelling~error~\msg_line_context:
                     \\
                     Did~you~mean~to~pass~option\\
-                    'UsedOn'~to~cref~or~Cref?
+                    ``UsedOn''~to~cref~or~Cref?
                 }
             \msg_fatal:nn { cleveref-usedon } { OptionSpellingError }
         }
@@ -189,7 +227,7 @@
     \NewCommandCopy{\__UsedOn_origcref}{\cref}
     \NewCommandCopy{\__UsedOn_origCref}{\Cref}
     \RenewDocumentCommand{\label}{ m }{%
-        \__UsedOn_origlabel{#1}\__UsedOn_PrintUsedOnLabel{#1}
+        \__UsedOn_origlabel{#1}\__UsedOn_PrintMessage{#1}
     }%
     \RenewCommandCopy{\cref}{\__UsedOn_cref}
     \RenewCommandCopy{\Cref}{\__UsedOn_Cref}
