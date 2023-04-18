@@ -7,7 +7,7 @@
 
 \usepackage{hyperref}
 %=========================================
-\usepackage[capitalise]{../cleveref-usedon}	
+\usepackage[capitalise]{cleveref-usedon}
 % If you have installed the package to a directory that latex understands, you can also do
 % \usepackage[capitalise]{cleveref-usedon}
 % This is a custom package, written by Sven Pistre.
@@ -32,8 +32,79 @@
 				name=Lemma,
 				refname={Lemma,Lemmas},
 				Refname={Lemma,Lemmas}]{lemma}
+\declaretheorem[	sibling=theorem,
+				name=Example,
+				refname={Example,Examples},
+				Refname={Example,Examples}]{example}
 			
 \begin{document}
 \include{SubFile1.tex}
 \include{SubFile2.tex}
+
+\section{Experimental options \texttt{UsedBy} and \texttt{UsedByAndOn}}
+\label{sec:UsedByAndOn}
+Unfortunately, due the way how this package is currently implemented, to get these
+experimental options to work it is necessary to abuse the usage of proof environments.
+Namely, one needs to nest the proof environment \emph{inside} the theorem-like environment.
+Note carefully how the proof environments are (ab)used in the above code example.
+
+This is -- as far is I know -- not how these environments are supposed to be used.
+In particular, placing text between theorem-like environment and the corresponding proof,
+as is often common, will result in a wrong reference. Namely, instead of referencing the
+theorem-like environment by name only the corresponding section name would be printed, e.g.
+``\emph{Used by \cref{sec:UsedByAndOn}.}''.
+You can see this for yourself, if you move the proof environment out of the theorem-like
+environment in the above examples.
+Hence, using proof environments correctly results in messages which are less helpful to the reader.
+On the other hand, using this experimental functionality to help the reader forces users (i.e. authors)
+of this package to use proof environments incorrectly.
+This sounds like a No-Free-Lunch theorem...
+Therefore, use these experimental options at your own discretion!
+
+The following shows the difference in behaviour if you use the proof environments as intended.
+If you comment out lines 96-106 in this .tex file, then it will display the intended behaviour of this package. However, you need use the proof environment differently.
+
+\begin{theorem}\label{lemma:SmoothFunction}
+Let $f\colon M\to(0,1)$ be a smooth function.
+\begin{enumerate}
+    \item   \label{thm:Item1}
+    	The function $f$ is continuous.
+    \item   \label{thm:Item2}
+    	The differential $\mathrm{d}f$ is continuous.
+\end{enumerate}
+\end{theorem}
+
+Check the following two pages.
+
+\clearpage
+The following works as you want.
+\begin{lemma}\label{thm:Works}
+Something about functions.
+\begin{proof}
+By \cref[UsedOn]{lemma:SmoothFunction} it's true. 
+In particular, \cref[UsedBy]{thm:Item2} is helpful.
+However, also \cref[UsedByAndOn]{thm:Item1} gives the result.
+\end{proof}
+\end{lemma}
+
+\begin{example}\label{ex:Works}
+Something about functions.
+\begin{proof}
+By \cref[UsedOn]{lemma:SmoothFunction} it's true. 
+In particular, \cref[UsedBy]{thm:Item2} is helpful.
+However, also \cref[UsedByAndOn]{thm:Item1} gives the result.
+\end{proof}
+\end{example}
+
+\clearpage
+The following does not work as you want because the proof environment is not nested inside the theorem-like environment.
+Comment it out to see the behaviour in the theorem that you asked for.
+\begin{example}\label{ex:DoesNotWork}
+Something about functions.
+\end{example}
+\begin{proof}
+By \cref[UsedOn]{lemma:SmoothFunction} it's true. 
+In particular, \cref[UsedBy]{thm:Item2} is helpful.
+However, also \cref[UsedByAndOn]{thm:Item1} gives the result.
+\end{proof}
 \end{document}
