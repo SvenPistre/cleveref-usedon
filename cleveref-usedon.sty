@@ -30,28 +30,60 @@
 %% LaTeX version 2005/12/01 or later.
 %% -----------------------------------------------------------------------
 %% 
-\def\packageversion{0.3.0}
-\def\packagedate{2023-04-18}
-\NeedsTeXFormat{LaTeX2e}[2022/06/01]
-\RequirePackage{expl3}
+\def\UsedOnPackageVersion{0.4.0}
+\def\UsedOnPackageDate{2023-04-21}
+\NeedsTeXFormat{LaTeX2e}[2021-06-01]
 \ProvidesExplPackage{cleveref-usedon}
-    {\packagedate}
-    {\packageversion}
+    {\UsedOnPackageDate}
+    {\UsedOnPackageVersion}
     {Patches the cleveref package and adds forward-referencing functionality}
+%%
+\providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
+\IfFormatAtLeastTF{2021-06-01}{%
+    % LaTeX2e version new enough
+}{%
+    \PackageError{cleveref-usedon}{%
+        Mismatched LaTeX support files detected.\MessageBreak
+        Your LaTeX format is dated \fmtversion,\MessageBreak
+        but the package cleveref-usedon\MessageBreak
+        requires at least 2021-06-01.\MessageBreak
+        Update your TeX distribution.\MessageBreak
+        \MessageBreak
+        Loading cleveref-usedon will abort!}%
+    {Update your TeX distribution\MessageBreak
+     using your TeX package manager.}%
+}
+\providecommand\IfExplAtLeastTF{\@ifl@t@r\ExplLoaderFileDate}
+\RequirePackage{expl3}[2021-05-16]
+\IfExplAtLeastTF{2021-05-16}{%
+    % expl3 version new enough
+}{%
+    \PackageError{cleveref-usedon}{%
+        Support package expl3 too old.\MessageBreak
+        The L3 programming layer in the LaTeX format\MessageBreak
+        is dated \ExplLoaderFileDate,\MessageBreak
+        but the package cleveref-usedon\MessageBreak
+        requires at least 2021-05-16.\MessageBreak
+        Update your TeX distribution.\MessageBreak
+        \MessageBreak
+        Loading cleveref-usedon will abort!}%
+    {Update your TeX distribution\MessageBreak
+     using your TeX package manager.}%
+}
 \RequirePackage{xparse}
-\bool_new:N \g_StandardBehaviour_bool
-\bool_gset_true:N \g_StandardBehaviour_bool
+\bool_new:N \g__UsedOn_StandardBehaviour_bool
+\bool_gset_true:N \g__UsedOn_StandardBehaviour_bool
 \DeclareOption{usedon}{
     \OptionNotUsed
-    \bool_gset_true:N \g_StandardBehaviour_bool
+    \bool_gset_true:N \g__UsedOn_StandardBehaviour_bool
 }
 \DeclareOption{notusedon}{
     \OptionNotUsed
-    \bool_gset_false:N \g_StandardBehaviour_bool
+    \bool_gset_false:N \g__UsedOn_StandardBehaviour_bool
 }
 \DeclareOption*{
     \PackageInfo{cleveref-usedon}
-        {Passing~to~cleveref:~Option~``\CurrentOption''}
+        {Passing~option~'\CurrentOption'~to~cleveref}
     \PassOptionsToPackage{\CurrentOption}{cleveref}
 }
 \ProcessOptions*
@@ -66,14 +98,16 @@
 \cs_generate_variant:Nn \str_case:nn { x }
 \seq_new:N \g__UsedOn_k_seq
 \prop_new:N \g__UsedOn_kv_prop
+\clist_new:N \g__UsedOn_Options_clist
+\clist_set:Nn \g__UsedOn_Options_clist {UsedOn, UsedBy, UsedByAndOn}
 \NewDocumentCommand{\UsedOnMessage}{m}{
-    \emph{(Used~on~#1.)} \\
+    \emph{(Used~on~#1.)} \newline
 }
 \NewDocumentCommand{\UsedByMessage}{ m }{
-    \emph{(Used~by~#1.)} \\
+    \emph{(Used~by~#1.)} \newline
 }
 \NewDocumentCommand{\UsedByAndOnMessage}{ m m }{
-    \emph{(Used~by~#1~on~#2.)} \\
+    \emph{(Used~by~#1~on~#2.)} \newline
 }
 \NewDocumentCommand{\__UsedOn_Printer}{ m m }{%
 %%    % Check if the reference #1@<LabelName>@1 exists
@@ -83,7 +117,7 @@
     \cs_if_exist:cT {r@#1@#2@1}
     {
 %%        % In a tmp clist we store all the references of the form
-%%        %    `UsedOn@<LabelName>@<Number>`
+%%        %    `<Option>@<LabelName>@<Number>`
 %%        % where Number between 1 and \value{LastRun@UsedOn@<LabelName>}
 %%        % if the latter exists, otherwise until 1
 %%        % Should/will normally need two consecutive runs of pdflatex
@@ -107,12 +141,11 @@
             {usedby}
                 {\UsedByMessage{\cref{\l_tmpa_clist}}}
             {usedbyandon}
-                {\UsedByAndOnMessage{\cref{\l_tmpa_clist}}{\cpageref{\l_tmpa_clist}}}
+                {\UsedByAndOnMessage{\cref{\l_tmpa_clist}}
+                    {\cpageref{\l_tmpa_clist}}}
         }
     }
 }%
-\clist_new:N \g__UsedOn_Options_clist
-\clist_set:Nn \g__UsedOn_Options_clist {UsedOn, UsedBy, UsedByAndOn}
 \NewDocumentCommand{\__UsedOn_PrintMessage}{ m }{%
     \clist_map_inline:Nn \g__UsedOn_Options_clist
         { \__UsedOn_Printer{##1}{#1} }
@@ -124,12 +157,12 @@
         {
 %%            % check if options 'UsedOn', 'UsedBy' or 'UsedByAndOn'
 %%            % (case-insensitive) were used in one of the following forms
-            {usedon} {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
-            {uo}     {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
-            {usedby} {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
-            {ub}     {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
-            {usedbyandon} {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
-            {ubao}        {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
+            {usedon} {\str_set:Nn \l__UsedOn_Option_str {UsedOn}}
+            {uo}     {\str_set:Nn \l__UsedOn_Option_str {UsedOn}}
+            {usedby} {\str_set:Nn \l__UsedOn_Option_str {UsedBy}}
+            {ub}     {\str_set:Nn \l__UsedOn_Option_str {UsedBy}}
+            {usedbyandon} {\str_set:Nn \l__UsedOn_Option_str {UsedByAndOn}}
+            {ubao}        {\str_set:Nn \l__UsedOn_Option_str {UsedByAndOn}}
         }
         {
             {
@@ -139,36 +172,37 @@
                 {
 %%                    % if the label has not been referenced yet,
 %%                    % create a counter for the current and last run and save the label in the
-%%                    % global container \g__UsedOn_k_seq
+%%                    % global container \g_@@_k_seq
                     \seq_if_in:NxF \g__UsedOn_k_seq
-                        { \str_use:N \l__UsedOn_Option_str @##1}
+                        { \l__UsedOn_Option_str @##1}
                     {
                         \newcounter{
-                            ThisRun@ \str_use:N \l__UsedOn_Option_str @##1
+                            ThisRun@ \l__UsedOn_Option_str @##1
                         }
-                        \cs_if_free:cT {c@LastRun@ \str_use:N \l__UsedOn_Option_str @##1}
-                            { \newcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} }
+                        \cs_if_free:cT {c@LastRun@ \l__UsedOn_Option_str @##1}
+                            {
+                            \newcounter{LastRun@ \l__UsedOn_Option_str @##1}
+                            }
                         \seq_gput_right:Nx \g__UsedOn_k_seq
-                            { \str_use:N \l__UsedOn_Option_str @##1}
+                            { \l__UsedOn_Option_str @##1}
                     }
 %%                    % increase the counters and compare with max counter
-                    \stepcounter{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1}
-                    \setcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}{%
-                        \fp_eval:n { max(%
-                            \value{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1},%
-                            \value{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} ) }%
+                    \stepcounter{ThisRun@ \l__UsedOn_Option_str @##1}
+                    \setcounter{LastRun@ \l__UsedOn_Option_str @##1}{%
+                        \fp_eval:n
+                            { max(%
+                            \value{ThisRun@ \l__UsedOn_Option_str @##1},%
+                            \value{LastRun@ \l__UsedOn_Option_str @##1}
+                            ) }%
                     }
 %%                    % store the value in global key-value property list
                     \prop_gput:Nxx \g__UsedOn_kv_prop
-                        { \str_use:N \l__UsedOn_Option_str @##1}
-                        {\arabic{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}}
+                        { \l__UsedOn_Option_str @##1}
+                        {\arabic{LastRun@ \l__UsedOn_Option_str @##1}}
 %%                    % create a label for the UsedOn reference and number this label
                     \__UsedOn_origlabel{
-                        \str_use:N\l__UsedOn_Option_str
-                        @##1@
-                        \arabic{ThisRun@
-                            \str_use:N \l__UsedOn_Option_str @##1
-                        }
+                        \l__UsedOn_Option_str @##1@
+                        \arabic{ThisRun@ \l__UsedOn_Option_str @##1}
                     }
                 }
             }
@@ -177,11 +211,11 @@
 %%                    % Throw an error, if an unrecognised option was used
 %%                    % for the optional argument to this macro.
             \msg_new:nnn {cleveref-usedon} { OptionSpellingError }
-                {    \\
+                {   \MessageBreak
                     Spelling~error~\msg_line_context:
-                    \\
-                    Did~you~mean~to~pass~option\\
-                    ``UsedOn''~to~cref~or~Cref?
+                    \MessageBreak
+                    Did~you~mean~to~pass~option\MessageBreak
+                    'UsedOn'~to~cref~or~Cref?
                 }
             \msg_fatal:nn { cleveref-usedon } { OptionSpellingError }
         }
@@ -203,7 +237,7 @@
     }
 }%
 \NewDocumentCommand{\__UsedOn_WriteToAux}{ }{%
-%%    % First, we clear the global key-value prop list |\g__UsedOn_kv_prop| and
+%%    % First, we clear the global key-value prop list \cs{g_@@_kv_prop} and
 %%    % then we rebuild it with the information from the current run.
     \prop_clear:N \g__UsedOn_kv_prop
     \seq_map_inline:Nn \g__UsedOn_k_seq
@@ -215,7 +249,10 @@
     \prop_map_inline:Nn \g__UsedOn_kv_prop
     {
         \iow_now:cx { @auxout }
-            { \prop_gput_from_keyval:Nn \token_to_str:N \g__UsedOn_kv_prop {##1=##2} }
+            {
+                \prop_gput_from_keyval:Nn \token_to_str:N \g__UsedOn_kv_prop
+                {##1=##2}
+            }
     }
 %%    % Turn off |expl3| functionality in .aux file.
     \iow_now:cx { @auxout }
