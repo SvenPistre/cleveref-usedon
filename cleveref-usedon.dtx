@@ -1,5 +1,5 @@
-\def\packageversion{0.3.0}
-\def\packagedate{2023-04-18}
+\def\UsedOnPackageVersion{0.3.0}
+\def\UsedOnPackageDate{2023-04-18}
 % \iffalse meta-comment
 %
 % Package `cleveref-usedon' to use with LaTeX2e
@@ -16,13 +16,13 @@
 % github issue or sending an email to cleveref-usedon@sven-pistre.com.
 % ---------------------------------------------------------------------------
 % This file may be distributed and/or modified under the
-% conditions of the LaTeX Project Public License, either 
-% version 1.3 of this license or (at your option) any later 
+% conditions of the LaTeX Project Public License, either
+% version 1.3 of this license or (at your option) any later
 % version. The latest version of this license is in:
 %
 %      http://www.latex-project.org/lppl.txt
 %
-% and version 1.3 or later is part of all distributions of 
+% and version 1.3 or later is part of all distributions of
 % LaTeX version 2005/12/01 or later.
 % -----------------------------------------------------------------------
 % This work consists of the files cleveref-usedon.dtx and cleveref-usedon.ins
@@ -35,11 +35,32 @@
 \ProvidesFile{cleveref-usedon.dtx}
 %</driver>
 %
-%<package>\NeedsTeXFormat{LaTeX2e}[2022/06/01]
-%<package>\RequirePackage{expl3}
+%<package>\providecommand\IfFormatAtLeastTF{\@ifl@t@r\fmtversion}
+%<package>\providecommand\IfExplAtLeastTF{\@ifl@t@r\ExplLoaderFileDate}
+%<package>\NeedsTeXFormat{LaTeX2e}[2021-06-01]
+%<package>\IfFormatAtLeastTF{2021-06-01}{%
+%<package>    % LaTeX2e version new enough
+%<package>}{%
+%<package>    \PackageError{cleveref-usedon}{Mismatched LaTeX support files detected.\MessageBreak
+%<package>        Your LaTeX format is dated \fmtversion,\MessageBreak
+%<package>        but the package cleveref-usedon\MessageBreak
+%<package>        requires at least 2021-06-01.\MessageBreak
+%<package>        Update your TeX distribution}{Update your TeX distribution.}%
+%<package>}
+%<package>\RequirePackage{expl3}[2021-05-16]
+%<package>\IfExplAtLeastTF{2021-05-16}{%
+%<package>    % Package version new enough
+%<package>}{%
+%<package>    \PackageError{cleveref-usedon}{Mismatched LaTeX support files detected.\MessageBreak
+%<package>        The L3 programming layer in the LaTeX format\MessageBreak
+%<package>        is dated \ExplLoaderFileDate,\MessageBreak
+%<package>        but the package cleveref-usedon\MessageBreak
+%<package>        requires at least 2021-05-16.\MessageBreak
+%<package>        Update your TeX distribution}{Update your TeX distribution.}%
+%<package>}
 %<package>\ProvidesExplPackage{cleveref-usedon}
-%<package>    {\packagedate}
-%<package>    {\packageversion}
+%<package>    {\UsedOnPackageDate}
+%<package>    {\UsedOnPackageVersion}
 %<package>    {Patches the cleveref package and adds forward-referencing functionality}
 %
 %<*driver>
@@ -51,7 +72,7 @@
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref-usedon}[2023/03/29]
 \declaretheorem[
-	numberwithin=section, 
+	numberwithin=section,
 	name=Theorem]{theorem}
 \declaretheorem[
 	sibling=theorem,
@@ -71,7 +92,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{231}
+% \CheckSum{220}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -107,46 +128,46 @@
 %
 % \GetFileInfo{cleveref-usedon.dtx}
 % \title{The \pkg{cleveref-usedon} package%
-%         \thanks{This document corresponds to 
-%         \pkg{cleveref-usedon}~v\packageversion,
-%         dated~\packagedate.}}
+%         \thanks{This document corresponds to
+%         \pkg{cleveref-usedon}~v\UsedOnPackageVersion,
+%         dated~\UsedOnPackageDate.}}
 % \author{Sven Pistre%
 %        \thanks{
 %            \href{mailto:cleveref-usedon@sven-pistre.com?subject=[cleveref-usedon]}{cleveref-usedon@sven-pistre.com}}
 % }
-% \date{\packagedate}
+% \date{\UsedOnPackageDate}
 %
 % \maketitle
 %
 % \begin{abstract}
-%	This package adds ``forward-referencing'' to the \pkg{cleveref} package.
-%	Any label can be referenced with the new optional argument ``|UsedOn|'' 
-%	passed to |\cref|. Doing so, will print an info message at the original label 
-%	location (in a theorem environment, say) which reads 
-%	``\emph{Used on pages \meta{list of pages}.}''.
+%	This package adds \enquote{forward-referencing} to the \pkg{cleveref} package.
+%	Any label can be referenced with the new optional argument |UsedOn|
+%	passed to |\cref|. Doing so, will print an info message at the original label
+%	location (in a theorem environment, say) which reads
+%	\enquote{\emph{Used on pages \meta{list of pages}.}}.
 %	This functionality is complementary to \pkg{hyperref}'s |pagebackref|
 %	or \pkg{biblatex}'s |backref| option for the bibliography.
-%	It might be useful for authors of longer texts such as textbooks or theses, 
+%	It might be useful for authors of longer texts such as textbooks or theses,
 %	where a lot of supplementary results and information are given in early
-%	chapters, appendices or exercises. The message on which pages these 
+%	chapters, appendices or exercises. The message on which pages these
 %	results will be used can be a helpful information for the reader of the final text.
 %	Additionally, a bug in \pkg{cleveref v0.21.4} is patched.
 % \end{abstract}
 %
 %	\section{Introduction}
 %	\label{sec:introduction}
-%	Imagine you are reading a long mathematical text such as a text book or 
-%	a thesis. There are plenty of supplementary lemmas, propositions, theorems 
-%	and/or exercises throughout the whole text. 
-%	You ask yourself ``Gosh, while Lemma 1.12 is certainly an interesting result 
-%	\emph{where} is this result used later on in this long text? I really would find 
+%	Imagine you are reading a long mathematical text such as a text book or
+%	a thesis. There are plenty of supplementary lemmas, propositions, theorems
+%	and/or exercises throughout the whole text.
+%	You ask yourself ``Gosh, while Lemma 1.12 is certainly an interesting result
+%	\emph{where} is this result used later on in this long text? I really would find
 %	that helpful to decide \emph{why} I should read the proof.''
-%	You can, of course, use the PDF search function of your viewer to look up the 
-%	string ``Lemma 1.12'' but wouldn't it be more helpful if Lemma 1.12 already 
+%	You can, of course, use the PDF search function of your viewer to look up the
+%	string \enquote{Lemma 1.12} but wouldn't it be more helpful if Lemma 1.12 already
 %	indicates all or at least its most useful/crucial applications via an info message?
-%	
+%
 %	This is what the package \pkg{cleveref-usedon} tries to address.
-%	The info message ``\emph{Used on p. 40, 43-45 and 101.}'' would then be 
+%	The info message \enquote{\emph{Used on p. 40, 43-45 and 101.}} would then be
 %	printed to the header of Lemma 1.12.
 %	For example, we have given the following theorem the label
 %	\begin{quote}
@@ -161,22 +182,22 @@
 %	\end{quote}
 %	A proof of \cref[UsedOn]{thm:SqrtTwoIrrational} can be traced back to Euclid.
 %	\clearpage
-%	Let's clear the page of this PDF, so that we can see the effects of 
-%	referencing \cref{thm:SqrtTwoIrrational} without the optional argument 
+%	Let's clear the page of this PDF, so that we can see the effects of
+%	referencing \cref{thm:SqrtTwoIrrational} without the optional argument
 %	|[UsedOn]|, i.e.
 %	\begin{quote}
 %		|\cref{thm:SqrtTwoIrrational}|.
 %	\end{quote}
-%	Note that the current page number \thepage{} is not included in the list of 
+%	Note that the current page number \thepage{} is not included in the list of
 %	page references in the header of \cref{thm:SqrtTwoIrrational}.
 %
 %	\section{Usage}
 %	\label{sec:usage}
 %	The \pkg{cleveref-usedon} package uses \pkg{cleveref v0.21.4}
-%	as its base. 
+%	as its base.
 %	To freely cite from the \pkg{cleveref} documentation:	\\
 %	The \pkg{cleveref-usedon} package is loaded in the usual way, by
-%	putting the line 
+%	putting the line
 %	\begin{quote}
 %		|\usepackage{cleveref-usedon}|
 %	\end{quote}
@@ -185,7 +206,7 @@
 %	\LaTeX{}'s referencing system (see Section 13 of \pkg{cleveref}'s
 %	documentation). Basically, \pkg{cleveref-usedon} must be loaded
 %	\emph{last} but definitely AFTER \pkg{hyperref}.	\\
-%	
+%
 %	\DescribeMacro{\cref}
 %	\DescribeMacro{\Cref}
 %	|\cref|\oarg{Option}\marg{LabelName}	\\
@@ -230,7 +251,7 @@
 %   and is set after the original location of the referenced label \meta{LabelName}.
 %   If \pkg{hyperref} has been loaded, there will also be hyperlinks
 %	to the corresponding pages from where the label has been referenced.
-%	
+%
 %	If the original label has been set in a theorem-like environment such as
 %	\begin{quote}
 %	\begin{verbatim}
@@ -313,7 +334,7 @@
 %   In particular, placing text between theorem-like environment and the corresponding proof,
 %   as is often common, will result in a wrong reference. Namely, instead of referencing the
 %   theorem-like environment by name only the corresponding section name would be printed, e.g.
-%   ``\emph{Used by \cref{sec:UsedByAndOn}.}''.
+%   \enquote{\emph{Used by \cref{sec:UsedByAndOn}.}}.
 %   You can see this for yourself, if you move the proof environment out of the theorem-like
 %   environment in the above examples.
 %   Hence, using proof environments correctly results in messages which are less helpful to the reader.
@@ -335,7 +356,7 @@
 %	environments such as \cref[UsedOn]{eq:Stokes} because sometimes\footnote{I haven't quite tracked down this bug.}
 %   the info message will --- unhelpfully --- be printed inside the equation
 %	environment, like so (this might or might not%
-%   \footnote{In version 0.2.0 of this package, the text ``\emph{Used on page 2.}''
+%   \footnote{In version 0.2.0 of this package, the text \enquote{\emph{Used on page 2.}}
 %   was printed right after the formula in the equation environment.}
 %   show undesired behaviour):
 %	\begin{equation}
@@ -351,6 +372,7 @@
 %
 %	\subsection{Editing the info messages}
 %	\label{subsec:edit_info_msg}
+%
 %	\DescribeMacro{\UsedOnMessage}
 %	\DescribeMacro{\UsedByMessage}
 %	\DescribeMacro{\UsedByAndOnMessage}
@@ -385,15 +407,15 @@
 %	\end{quote}
 %
 %	\section{Interaction with other packages}
-%	\label{sec:other_packages}
-%	All interactions with other packages mentioned in Section 13 of 
+%	\label{sec:OtherPackages}
+%	All interactions with other packages mentioned in Section 13 of
 %	\pkg{cleveref}'s documentation also apply to \pkg{cleveref-usedon}.
 %	In fact (if \pkg{cleveref-usedon} is loaded last),
 %	\pkg{ntheorem}'s |\thref| and
 %	\pkg{varioref}'s |\vref| also obtain the additional |UsedOn|
 %	functionality because \pkg{cleveref} redefines these macros to
 %	be aliases for |\cref|.
-%	
+%
 %	\section{Future features}
 %	\label{sec:future}
 %   For all feature requests, either
@@ -435,7 +457,7 @@
 %    \begin{macrocode}
 \DeclareOption*{
     \PackageInfo{cleveref-usedon}
-        {Passing~to~cleveref:~Option~``\CurrentOption''}
+        {Passing~to~cleveref:~Option~\emph{\CurrentOption}}
     \PassOptionsToPackage{\CurrentOption}{cleveref}
 }
 \ProcessOptions*
@@ -615,12 +637,12 @@
 %%            % (case-insensitive) were used in one of the following forms
 %\fi
 %    \begin{macrocode}
-            {usedon} {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
-            {uo}     {\str_set:Nx \l__UsedOn_Option_str {UsedOn}}
-            {usedby} {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
-            {ub}     {\str_set:Nx \l__UsedOn_Option_str {UsedBy}}
-            {usedbyandon} {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
-            {ubao}        {\str_set:Nx \l__UsedOn_Option_str {UsedByAndOn}}
+            {usedon} {\str_set:Nn \l__UsedOn_Option_str {UsedOn}}
+            {uo}     {\str_set:Nn \l__UsedOn_Option_str {UsedOn}}
+            {usedby} {\str_set:Nn \l__UsedOn_Option_str {UsedBy}}
+            {ub}     {\str_set:Nn \l__UsedOn_Option_str {UsedBy}}
+            {usedbyandon} {\str_set:Nn \l__UsedOn_Option_str {UsedByAndOn}}
+            {ubao}        {\str_set:Nn \l__UsedOn_Option_str {UsedByAndOn}}
         }
         {
             {
@@ -651,15 +673,15 @@
 %\fi
 %    \begin{macrocode}
                     \seq_if_in:NxF \g__UsedOn_k_seq
-                        { \str_use:N \l__UsedOn_Option_str @##1}
+                        { \l__UsedOn_Option_str @##1}
                     {
                         \newcounter{
-                            ThisRun@ \str_use:N \l__UsedOn_Option_str @##1
+                            ThisRun@ \l__UsedOn_Option_str @##1
                         }
-                        \cs_if_free:cT {c@LastRun@ \str_use:N \l__UsedOn_Option_str @##1}
-                            { \newcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} }
+                        \cs_if_free:cT {c@LastRun@ \l__UsedOn_Option_str @##1}
+                            { \newcounter{LastRun@ \l__UsedOn_Option_str @##1} }
                         \seq_gput_right:Nx \g__UsedOn_k_seq
-                            { \str_use:N \l__UsedOn_Option_str @##1}
+                            { \l__UsedOn_Option_str @##1}
                     }
 %    \end{macrocode}
 %	Increase the counter for the current run by 1 and set the counter
@@ -669,11 +691,13 @@
 %%                    % increase the counters and compare with max counter
 %\fi
 %    \begin{macrocode}
-                    \stepcounter{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1}
-                    \setcounter{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}{%
-                        \fp_eval:n { max(%
-                            \value{ThisRun@ \str_use:N \l__UsedOn_Option_str @##1},%
-                            \value{LastRun@ \str_use:N \l__UsedOn_Option_str @##1} ) }%
+                    \stepcounter{ThisRun@ \l__UsedOn_Option_str @##1}
+                    \setcounter{LastRun@ \l__UsedOn_Option_str @##1}{%
+                        \fp_eval:n
+                            { max(%
+                            \value{ThisRun@ \l__UsedOn_Option_str @##1},%
+                            \value{LastRun@ \l__UsedOn_Option_str @##1}
+                            ) }%
                     }
 %    \end{macrocode}
 %	Store the value of the max counter |LastRun@<Option>@##1| in
@@ -683,8 +707,8 @@
 %\fi
 %    \begin{macrocode}
                     \prop_gput:Nxx \g__UsedOn_kv_prop
-                        { \str_use:N \l__UsedOn_Option_str @##1}
-                        {\arabic{LastRun@ \str_use:N \l__UsedOn_Option_str @##1}}
+                        { \l__UsedOn_Option_str @##1}
+                        {\arabic{LastRun@ \l__UsedOn_Option_str @##1}}
 %    \end{macrocode}
 %	Now we create a numbered auxiliary label. This label is issued at the
 %	location where we referenced the original label via
@@ -698,11 +722,8 @@
 %\fi
 %    \begin{macrocode}
                     \__UsedOn_origlabel{
-                        \str_use:N\l__UsedOn_Option_str
-                        @##1@
-                        \arabic{ThisRun@
-                            \str_use:N \l__UsedOn_Option_str @##1
-                        }
+                        \l__UsedOn_Option_str @##1@
+                        \arabic{ThisRun@ \l__UsedOn_Option_str @##1}
                     }
                 }
             }
@@ -721,7 +742,7 @@
                     Spelling~error~\msg_line_context:
                     \\
                     Did~you~mean~to~pass~option\\
-                    ``UsedOn''~to~cref~or~Cref?
+                    \enquote{UsedOn}~to~cref~or~Cref?
                 }
             \msg_fatal:nn { cleveref-usedon } { OptionSpellingError }
         }
