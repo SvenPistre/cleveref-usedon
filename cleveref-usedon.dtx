@@ -579,7 +579,7 @@
 %	This |clist| contains all options that can be passed to |\cref| which are currently implemented.
 %    \begin{macrocode}
 \clist_new:N \g_@@_Options_clist
-\clist_set:Nn \g_@@_Options_clist {UsedOn, UsedBy, UsedByAndOn}
+\clist_set:Nn \g_@@_Options_clist { UsedOn, UsedBy, UsedByAndOn }
 %    \end{macrocode}
 %\end{variable}
 %
@@ -589,23 +589,26 @@
 %   |[UsedOn]|, |[UsedBy]| or |[UsedByAndOn]|.
 %
 %    \begin{macrocode}
-\NewDocumentCommand{\UsedOnMessage}{m}{
+\NewDocumentCommand \UsedOnMessage { m }
+  {
     \emph{(Used~on~#1.)} \newline
-}
+  }
 %    \end{macrocode}
 %\end{macro}
 %\begin{macro}{\UsedByMessage}
 %    \begin{macrocode}
-\NewDocumentCommand{\UsedByMessage}{ m }{
+\NewDocumentCommand \UsedByMessage { m }
+  {
     \emph{(Used~by~#1.)} \newline
-}
+  }
 %    \end{macrocode}
 %\end{macro}
 %\begin{macro}{\UsedByAndOnMessage}
 %    \begin{macrocode}
-\NewDocumentCommand{\UsedByAndOnMessage}{ m m }{
+\NewDocumentCommand \UsedByAndOnMessage { m m }
+  {
     \emph{(Used~by~#1~on~#2.)} \newline
-}
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -619,7 +622,8 @@
 %   or |\UsedByAndOnMessage| to be printed after the original label.
 %
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_Printer}{ m m }{%
+\NewDocumentCommand \@@_Printer { m m }
+  {
 %    \end{macrocode}
 %	First, we will check if the reference \meta{Option}|@|\meta{LabelName}|@1|
 %	exists. Here, the |@1| means that \meta{LabelName} has been referenced
@@ -633,7 +637,7 @@
 %\fi
 %    \begin{macrocode}
     \cs_if_exist:cT {r@#1@#2@1}
-    {
+      {
 %    \end{macrocode}
 %	Next, we store all the references of the form
 %	\meta{Option}|@|\meta{LabelName}|@|\meta{Number} in a temporary
@@ -649,14 +653,14 @@
 %\fi
 %    \begin{macrocode}
         \cs_if_free:cTF {c@LastRun@#1@#2}
-            { \int_set:Nn \l_tmpa_int { 1 } }
-            { \int_set:Nn \l_tmpa_int { \value{LastRun@#1@#2} } }
+          { \int_set:Nn \l_tmpa_int { 1 } }
+          { \int_set:Nn \l_tmpa_int { \value{LastRun@#1@#2} } }
         \int_set:Nn \l_tmpb_int { 1 }
         \int_while_do:nn { \l_tmpb_int <= \l_tmpa_int }
-        {
+          {
             \clist_put_right:Nx \l_tmpa_clist { #1@#2@\int_use:N \l_tmpb_int }
             \int_incr:N \l_tmpb_int
-        }
+          }
 %    \end{macrocode}
 %	Finally, we print the message that was set in the macro |\UsedOnMessage|.
 %\iffalse
@@ -667,27 +671,29 @@
 %\fi
 %    \begin{macrocode}
         \str_case:xn { \str_foldcase:n { #1 } }
-        {
+          {
             {usedon}
-                {\UsedOnMessage{\cpageref{\l_tmpa_clist}}}
+              { \UsedOnMessage { \cpageref{\l_tmpa_clist} } }
             {usedby}
-                {\UsedByMessage{\cref{\l_tmpa_clist}}}
+              { \UsedByMessage { \cref{\l_tmpa_clist} } }
             {usedbyandon}
-                {\UsedByAndOnMessage{\cref{\l_tmpa_clist}}
-                    {\cpageref{\l_tmpa_clist}}}
-        }
+              { \UsedByAndOnMessage { \cref{\l_tmpa_clist} } { \cpageref{\l_tmpa_clist} } }
+          }
     }
-}%
+  }
 %    \end{macrocode}
 %\end{macro}
 %
 %\begin{macro}{\@@_PrintMessage}
 %	This macro prints the corresponding |UsedOn| message after the original label.
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_PrintMessage}{ m }{%
+\NewDocumentCommand \@@_PrintMessage { m }
+  {
     \clist_map_inline:Nn \g_@@_Options_clist
-        { \@@_Printer{##1}{#1} }
-}%
+      {
+        \@@_Printer{##1}{#1}
+      }
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -705,12 +711,13 @@
 %	(a case-insensitive version of the options or their shortform)
 %	and a mandatory argument (a single \marg{LabelName} or a |clist| \{\meta{LabelName1},\meta{LabelName2},\ldots\}).
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_Processor}{ o m }{%
+\NewDocumentCommand \@@_Processor { o m }
+  {
     \IfValueT{#1}{
 %    \end{macrocode}
 %	First, we check if the option |[UsedOn]| or |[uo]| (case-insensitive) was used.
 %    \begin{macrocode}
-        \str_case:xnTF { \str_foldcase:n { #1 } }
+      \str_case:xnTF { \str_foldcase:n { #1 } }
         {
 %    \end{macrocode}
 %\iffalse
@@ -718,10 +725,10 @@
 %%            % (case-insensitive) were used in one of the following forms
 %\fi
 %    \begin{macrocode}
-            {usedon} {\str_set:Nn \l_@@_Option_str {UsedOn}}
-            {uo}     {\str_set:Nn \l_@@_Option_str {UsedOn}}
-            {usedby} {\str_set:Nn \l_@@_Option_str {UsedBy}}
-            {ub}     {\str_set:Nn \l_@@_Option_str {UsedBy}}
+            {usedon}      {\str_set:Nn \l_@@_Option_str {UsedOn}}
+            {uo}          {\str_set:Nn \l_@@_Option_str {UsedOn}}
+            {usedby}      {\str_set:Nn \l_@@_Option_str {UsedBy}}
+            {ub}          {\str_set:Nn \l_@@_Option_str {UsedBy}}
             {usedbyandon} {\str_set:Nn \l_@@_Option_str {UsedByAndOn}}
             {ubao}        {\str_set:Nn \l_@@_Option_str {UsedByAndOn}}
         }
@@ -732,11 +739,11 @@
 %	of |\cref| (or |\Cref|) which gets passed as the mandatory argument
 %	of the current macro.
 %\iffalse
-%%                % Loop through (potential) label list in arg of \cref (or \Cref)
+%%              % Loop through (potential) label list in arg of \cref (or \Cref)
 %\fi
 %    \begin{macrocode}
-                \seq_set_from_clist:Nn \l_tmpa_seq {#2}
-                \seq_map_inline:Nn \l_tmpa_seq
+              \seq_set_from_clist:Nn \l_tmpa_seq {#2}
+              \seq_map_inline:Nn \l_tmpa_seq
                 {
 %    \end{macrocode}
 %	If the label has \emph{not} been referenced yet via the option |#1| where |#1| is one of
@@ -749,39 +756,39 @@
 %	If we are in the initial run, we need to create this counter as well.
 %	Then save the label in the global container \cs{g_@@_k_seq}.
 %\iffalse
-%%                    % if the label has not been referenced yet,
-%%                    % create a counter for the current and last run and save the label in the
-%%                    % global container \g_@@_k_seq
+%%                  % if the label has not been referenced yet,
+%%                  % create a counter for the current and last run and save the label in the
+%%                  % global container \g_@@_k_seq
 %\fi
 %    \begin{macrocode}
-                    \seq_if_in:NxF \g_@@_k_seq
-                        { \l_@@_Option_str @##1}
+                  \seq_if_in:NxF \g_@@_k_seq { \l_@@_Option_str @##1 }
                     {
-                        \newcounter{
-                            ThisRun@ \l_@@_Option_str @##1
-                        }
+                        \newcounter{ ThisRun@ \l_@@_Option_str @##1 }
                         \cs_if_free:cT {c@LastRun@ \l_@@_Option_str @##1}
-                            {
+                          {
                             \newcounter{LastRun@ \l_@@_Option_str @##1}
-                            }
+                          }
                         \seq_gput_right:Nx \g_@@_k_seq
-                            { \l_@@_Option_str @##1}
+                          { \l_@@_Option_str @##1}
                     }
 %    \end{macrocode}
 %	Increase the counter for the current run by 1 and set the counter
 %	for last run (containing the maximal amount of |UsedOn|-|\cref|'s)
 %	to...the maximal amount of |UsedOn|-|\cref|'s.
 %\iffalse
-%%                    % increase the counters and compare with max counter
+%%                  % increase the counters and compare with max counter
 %\fi
 %    \begin{macrocode}
-                    \stepcounter{ThisRun@ \l_@@_Option_str @##1}
-                    \setcounter{LastRun@ \l_@@_Option_str @##1}{%
-                        \fp_eval:n
-                            { max(%
-                            \value{ThisRun@ \l_@@_Option_str @##1},%
+                  \stepcounter{ThisRun@ \l_@@_Option_str @##1}
+                  \setcounter{LastRun@ \l_@@_Option_str @##1}
+                    {
+                      \fp_eval:n
+                        {
+                          max(
+                            \value{ThisRun@ \l_@@_Option_str @##1} ,
                             \value{LastRun@ \l_@@_Option_str @##1}
-                            ) }%
+                          )
+                        }
                     }
 %    \end{macrocode}
 %	Store the value of the max counter |LastRun@<Option>@##1| in
@@ -791,8 +798,8 @@
 %\fi
 %    \begin{macrocode}
                     \prop_gput:Nxx \g_@@_kv_prop
-                        { \l_@@_Option_str @##1}
-                        {\arabic{LastRun@ \l_@@_Option_str @##1}}
+                      { \l_@@_Option_str @##1}
+                      {\arabic{LastRun@ \l_@@_Option_str @##1}}
 %    \end{macrocode}
 %	Now we create a numbered auxiliary label. This label is issued at the
 %	location where we referenced the original label via
@@ -805,10 +812,11 @@
 %%                    % create a label for the UsedOn reference and number this label
 %\fi
 %    \begin{macrocode}
-                    \@@_origlabel{
+                    \@@_origlabel
+                      {
                         \l_@@_Option_str @##1@
                         \arabic{ThisRun@ \l_@@_Option_str @##1}
-                    }
+                      }
                 }
             }
         }
@@ -817,21 +825,22 @@
 %	Throw an error, if an unrecognised option was used for the
 %	optional argument to this macro.
 %\iffalse
-%%                    % Throw an error, if an unrecognised option was used
-%%                    % for the optional argument to this macro.
+%%            % Throw an error, if an unrecognised option was used
+%%            % for the optional argument to this macro.
 %\fi
 %    \begin{macrocode}
             \msg_new:nnn {cleveref-usedon} { OptionSpellingError }
-                {   \MessageBreak
-                    Spelling~error~\msg_line_context:
-                    \MessageBreak
-                    Did~you~mean~to~pass~option\MessageBreak
-                    'UsedOn'~to~cref~or~Cref?
-                }
+              {
+                \MessageBreak
+                Spelling~error~\msg_line_context:
+                \MessageBreak
+                Did~you~mean~to~pass~option\MessageBreak
+                'UsedOn'~to~cref~or~Cref?
+              }
             \msg_fatal:nn { cleveref-usedon } { OptionSpellingError }
         }
     }
-}%
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -839,10 +848,11 @@
 %	This is just a wrapper around \pkg{cleveref}'s |\cref|.
 %	Additionally the \cs{@@_Processor} gets called.
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_cref}{ s o m }{%
-    \IfBooleanTF{#1}{ \@@_origcref*{#3} }{ \@@_origcref{#3} }%
+\NewDocumentCommand \@@_cref { s o m }
+  {
+    \IfBooleanTF{#1}{ \@@_origcref*{#3} }{ \@@_origcref{#3} }
     \@@_Processor[#2]{#3}
-}%
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -850,10 +860,11 @@
 %	This is just a wrapper around \pkg{cleveref}'s |\Cref|.
 %	Additionally the \cs{@@_Processor} gets called.
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_Cref}{ s o m }{%
-    \IfBooleanTF{#1}{ \@@_origCref*{#3} }{ \@@_origCref{#3} }%
+\NewDocumentCommand \@@_Cref { s o m }
+  {
+    \IfBooleanTF{#1}{ \@@_origCref*{#3} }{ \@@_origCref{#3} }
     \@@_Processor[#2]{#3}
-}%
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -863,13 +874,14 @@
 %	This is a key-value property list and we create and set a
 %	for each label (key) and the maximal amount (value) it was called in the last run.
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_ReadFromAux}{ }{%
+\NewDocumentCommand \@@_ReadFromAux { }
+  {
     \prop_map_inline:Nn \g_@@_kv_prop
-    {
-        \newcounter{LastRun@##1}
-        \setcounter{LastRun@##1}{##2}
-    }
-}%
+      {
+          \newcounter{LastRun@##1}
+          \setcounter{LastRun@##1}{##2}
+      }
+  }
 %    \end{macrocode}
 %\end{macro}
 %
@@ -880,39 +892,40 @@
 %	and the counters with prefix |ThisRun@| we set earlier.
 %	We need to wrap this in the on/off switch for |expl3| functionality.
 %    \begin{macrocode}
-\NewDocumentCommand{\@@_WriteToAux}{ }{%
+\NewDocumentCommand \@@_WriteToAux { }
+  {
 %    \end{macrocode}
 %%    % First, we clear the global key-value prop list \cs{g_@@_kv_prop} and
 %%    % then we rebuild it with the information from the current run.
 %    \begin{macrocode}
     \prop_clear:N \g_@@_kv_prop
     \seq_map_inline:Nn \g_@@_k_seq
-        { \prop_gput:Nxx \g_@@_kv_prop {##1}{\arabic{ThisRun@##1}} }
+      { \prop_gput:Nxx \g_@@_kv_prop {##1}{\arabic{ThisRun@##1}} }
 %    \end{macrocode}
 %\iffalse
 %%    % Turn on |expl3| functionality in .aux file.
 %\fi
 %    \begin{macrocode}
     \iow_now:cx { @auxout }
-        { \token_to_str:N \ExplSyntaxOn }
+      { \token_to_str:N \ExplSyntaxOn }
 %    \end{macrocode}
 %%    % Loop through the key-val |proplist| and write contents to .aux file.
 %    \begin{macrocode}
     \prop_map_inline:Nn \g_@@_kv_prop
-    {
+      {
         \iow_now:cx { @auxout }
-            {
-                \prop_gput_from_keyval:Nn \token_to_str:N \g_@@_kv_prop
-                {##1=##2}
-            }
-    }
+          {
+            \prop_gput_from_keyval:Nn \token_to_str:N \g_@@_kv_prop
+            {##1=##2}
+          }
+      }
 %    \end{macrocode}
 %\iffalse
 %%    % Turn off |expl3| functionality in .aux file.
 %\fi
 %    \begin{macrocode}
     \iow_now:cx { @auxout }
-        { \token_to_str:N \ExplSyntaxOff }
+      { \token_to_str:N \ExplSyntaxOff }
 }%
 %    \end{macrocode}
 %\end{macro}
@@ -920,27 +933,30 @@
 %	At the hook |\AtBeginDocument| we read from the .aux file
 %	and patch commands.
 %    \begin{macrocode}
-\AtBeginDocument{%
+\hook_gput_code:nnn { begindocument } { cleveref-usedon }
+  {
     \@@_ReadFromAux
 %    \end{macrocode}
 %	Patch label and cref to include the new |[UsedOn]| capabilities.
 %    \begin{macrocode}
-    \NewCommandCopy{\@@_origlabel}{\label}
-    \NewCommandCopy{\@@_origcref}{\cref}
-    \NewCommandCopy{\@@_origCref}{\Cref}
-    \RenewDocumentCommand{\label}{ m }{%
+    \NewCommandCopy \@@_origlabel \label
+    \NewCommandCopy \@@_origcref  \cref
+    \NewCommandCopy \@@_origCref  \Cref
+    \RenewDocumentCommand \label { m }
+      {
         \@@_origlabel{#1}\@@_PrintMessage{#1}
-    }%
-    \RenewCommandCopy{\cref}{\@@_cref}
-    \RenewCommandCopy{\Cref}{\@@_Cref}
-}%
+      }
+    \RenewCommandCopy \cref \@@_cref
+    \RenewCommandCopy \Cref \@@_Cref
+  }
 %    \end{macrocode}
 %
 %	At the hook |\AtEndDocument| we write to the .aux file.
 %    \begin{macrocode}
-\AtEndDocument{%
+\hook_gput_code:nnn { enddocument } { cleveref-usedon }
+  {
     \@@_WriteToAux
-}%
+  }
 %    \end{macrocode}
 %
 %
