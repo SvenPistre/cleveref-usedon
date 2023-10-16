@@ -581,6 +581,79 @@
 %    \end{macrocode}
 %\end{variable}
 %
+\cs_new:Nn \@@_UsedOnMessage:n { }
+\cs_new:Nn \@@_UsedByMessage:n { }
+\cs_new:Nn \@@_UsedByAndOnMessage:nn { }
+%
+%\begin{macro}{\DefineUsedOnMessage}
+%
+%    \begin{macrocode}
+\NewDocumentCommand \DefineUsedOnMessage { m }
+  {
+    \cs_set:Nn \@@_UsedOnMessage:n { #1 }
+  }
+%    \end{macrocode}
+%\end{macro}
+%
+%\begin{macro}{\DefineUsedByMessage}
+%
+%    \begin{macrocode}
+\NewDocumentCommand \DefineUsedByMessage { m }
+  {
+    \cs_set:Nn \@@_UsedByMessage:n { #1 }
+  }
+%    \end{macrocode}
+%\end{macro}
+%
+%\begin{macro}{\DefineUsedByAndOnMessage}
+%
+%    \begin{macrocode}
+\NewDocumentCommand \DefineUsedByAndOnMessage { m }
+  {
+    \cs_set:Nn \@@_UsedByAndOnMessage:nn { #1 }
+  }
+%    \end{macrocode}
+%\end{macro}
+%
+%    \begin{macrocode}
+\RequirePackage{iflang}
+
+\DefineUsedOnMessage
+  {
+    \IfLanguageName{english}
+        { (Used~on~#1.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~en~#1.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~auf~#1.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1.) } {}
+  }
+\DefineUsedByMessage
+  {
+    \IfLanguageName{english}
+        { (Used~by~#1.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~dans~#1.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~in~#1.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1.) } {}
+  }
+\DefineUsedByAndOnMessage
+  {
+    \IfLanguageName{english}
+        { (Used~by~#1~on~#2.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~dans~#1~en~#2.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~in~#1~auf~#2.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1~en~#2.) } {}
+  }
+
+%    \end{macrocode}
+%
 %\begin{macro}{\UsedOnMessage}
 %	The following are the standard texts that get printed in the first line
 %	of the labelled environment which later gets referenced with
@@ -589,7 +662,7 @@
 %    \begin{macrocode}
 \NewDocumentCommand \UsedOnMessage { m }
   {
-    \emph{(Used~on~#1.)} \newline
+    \emph{ \@@_UsedOnMessage:n { #1 } } \\[.3\baselineskip]
   }
 %    \end{macrocode}
 %\end{macro}
@@ -597,7 +670,7 @@
 %    \begin{macrocode}
 \NewDocumentCommand \UsedByMessage { m }
   {
-    \emph{(Used~by~#1.)} \newline
+    \emph{ \@@_UsedByMessage:n { #1 } } \\[.3\baselineskip]
   }
 %    \end{macrocode}
 %\end{macro}
@@ -605,7 +678,7 @@
 %    \begin{macrocode}
 \NewDocumentCommand \UsedByAndOnMessage { m m }
   {
-    \emph{(Used~by~#1~on~#2.)} \newline
+    \emph{ \@@_UsedByAndOnMessage:nn { #1 } { #2 } } \\[.3\baselineskip]
   }
 %    \end{macrocode}
 %\end{macro}

@@ -102,17 +102,68 @@
 \prop_new:N \g__UsedOn_kv_prop
 \clist_new:N \g__UsedOn_Options_clist
 \clist_set:Nn \g__UsedOn_Options_clist { UsedOn, UsedBy, UsedByAndOn }
+\cs_new:Nn \__UsedOn_UsedOnMessage:n { }
+\cs_new:Nn \__UsedOn_UsedByMessage:n { }
+\cs_new:Nn \__UsedOn_UsedByAndOnMessage:nn { }
+\NewDocumentCommand \DefineUsedOnMessage { m }
+  {
+    \cs_set:Nn \__UsedOn_UsedOnMessage:n { #1 }
+  }
+\NewDocumentCommand \DefineUsedByMessage { m }
+  {
+    \cs_set:Nn \__UsedOn_UsedByMessage:n { #1 }
+  }
+\NewDocumentCommand \DefineUsedByAndOnMessage { m }
+  {
+    \cs_set:Nn \__UsedOn_UsedByAndOnMessage:nn { #1 }
+  }
+\RequirePackage{iflang}
+
+\DefineUsedOnMessage
+  {
+    \IfLanguageName{english}
+        { (Used~on~#1.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~en~#1.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~auf~#1.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1.) } {}
+  }
+\DefineUsedByMessage
+  {
+    \IfLanguageName{english}
+        { (Used~by~#1.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~dans~#1.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~in~#1.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1.) } {}
+  }
+\DefineUsedByAndOnMessage
+  {
+    \IfLanguageName{english}
+        { (Used~by~#1~on~#2.) } {}
+    \IfLanguageName{french}
+        { (Apparaît~dans~#1~en~#2.) } {}
+    \IfLanguageName{ngerman}
+        { (Wird~in~#1~auf~#2.) } {}
+    \IfLanguageName{spanish}
+        { (Aparece~en~#1~en~#2.) } {}
+  }
+
 \NewDocumentCommand \UsedOnMessage { m }
   {
-    \emph{(Used~on~#1.)} \newline
+    \emph{ \__UsedOn_UsedOnMessage:n { #1 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \UsedByMessage { m }
   {
-    \emph{(Used~by~#1.)} \newline
+    \emph{ \__UsedOn_UsedByMessage:n { #1 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \UsedByAndOnMessage { m m }
   {
-    \emph{(Used~by~#1~on~#2.)} \newline
+    \emph{ \__UsedOn_UsedByAndOnMessage:nn { #1 } { #2 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \__UsedOn_Printer { m m }
   {
