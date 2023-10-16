@@ -375,7 +375,7 @@
     \iow_now:cx { @auxout }
       { \token_to_str:N \ExplSyntaxOff }
 }%
-\hook_gput_code:nnn { begindocument } { cleveref-usedon }
+\hook_gput_code:nnn { begindocument/end } { cleveref-usedon }
   {
     \__UsedOn_ReadFromAux
     \NewCommandCopy \__UsedOn_origlabel \label

@@ -64,7 +64,7 @@
 % \fi
 %%
 % \DoNotIndex{
-%   \arabic, \AtBeginDocument, \AtEndDocument,
+%   \arabic,
 %   \emph, \enquote, \ExplSyntaxOn, \ExplSyntaxOff,
 %   \MessageBreak
 %   }
@@ -1087,10 +1087,10 @@
 %    \end{macrocode}
 %\end{macro}
 %
-%	At the hook |\AtBeginDocument| we read from the .aux file
+%	At the hook |begindocument/end| we read from the .aux file
 %	and patch commands.
 %    \begin{macrocode}
-\hook_gput_code:nnn { begindocument } { cleveref-usedon }
+\hook_gput_code:nnn { begindocument/end } { cleveref-usedon }
   {
     \@@_ReadFromAux
 %    \end{macrocode}
@@ -1110,7 +1110,7 @@
   }
 %    \end{macrocode}
 %
-%	At the hook |\AtEndDocument| we write to the .aux file.
+%	At the hook |enddocument| we write to the .aux file.
 %    \begin{macrocode}
 \hook_gput_code:nnn { enddocument } { cleveref-usedon }
   {
