@@ -68,23 +68,27 @@
         Loading~cleveref-usedon~will~abort!}%
         {Update~your~TeX~distribution~using~your~TeX~package~manager.}%
 }
-\RequirePackage{xparse}
-\bool_new:N \g__UsedOn_StandardBehaviour_bool
-\bool_gset_true:N \g__UsedOn_StandardBehaviour_bool
-\DeclareOption{usedon}{
-    \OptionNotUsed
-    \bool_gset_true:N \g__UsedOn_StandardBehaviour_bool
-}
-\DeclareOption{notusedon}{
-    \OptionNotUsed
-    \bool_gset_false:N \g__UsedOn_StandardBehaviour_bool
-}
-\DeclareOption*{
-    \PackageInfo{cleveref-usedon}
-        {Passing~option~'\CurrentOption'~to~cleveref}
-    \PassOptionsToPackage{\CurrentOption}{cleveref}
-}
-\ProcessOptions*
+
+\keys_define:nn { cleveref-usedon }
+  {
+    , Default     .tl_set:N   = \l__UsedOn_default_tl
+    , Default     .initial:n  = { }
+    , Default     .value_required:n = true
+    , UsedOn      .meta:n     = { Default = UsedOn }
+    , usedon      .meta:n     = { Default = UsedOn }
+    , uo          .meta:n     = { Default = UsedOn }
+    , UsedBy      .meta:n     = { Default = UsedBy }
+    , usedby      .meta:n     = { Default = UsedBy }
+    , ub          .meta:n     = { Default = UsedBy }
+    , UsedByAndOn .meta:n     = { Default = UsedByAndOn }
+    , usedbyandon .meta:n     = { Default = UsedByAndOn }
+    , ubao        .meta:n     = { Default = UsedByAndOn }
+
+    , unknown    .code:n     =
+        { \PassOptionsToPackage { \CurrentOption } { cleveref } }
+  }
+\ProcessKeyOptions [ cleveref-usedon ]
+
 \RequirePackage{cleveref}[2018/03/27]
 \newcommand*{\@setcpagerefrange}[3]{%
     \@@setcpagerefrange{#1}{#2}{cref}{#3}}
@@ -234,6 +238,7 @@
     \IfValueTF { #2 }
       {
         \clist_set:Nn \l__UsedOn_args_clist { #2 }
+        \clist_put_left:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
         \clist_map_inline:Nn \l__UsedOn_args_clist
           {
             \str_case:xnT { \str_foldcase:n { ##1 } }
@@ -259,6 +264,15 @@
           }
       }
       {
+        \tl_if_blank:VF \l__UsedOn_default_tl
+          {
+            \clist_clear:N \l__UsedOn_args_clist
+            \clist_put_left:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
+            \clist_map_inline:Nn \l__UsedOn_args_clist
+              {
+                \__UsedOn_Processor[##1]{#3}
+              }
+          }
         \IfBooleanTF{#1}{ \__UsedOn_origcref*{#3} }{ \__UsedOn_origcref{#3} }
       }
   }
@@ -267,6 +281,7 @@
     \IfValueTF { #2 }
       {
         \clist_set:Nn \l__UsedOn_args_clist { #2 }
+        \clist_put_left:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
         \clist_map_inline:Nn \l__UsedOn_args_clist
           {
             \str_case:xnT { \str_foldcase:n { ##1 } }
@@ -292,6 +307,15 @@
           }
       }
       {
+        \tl_if_blank:VF \l__UsedOn_default_tl
+          {
+            \clist_clear:N \l__UsedOn_args_clist
+            \clist_put_left:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
+            \clist_map_inline:Nn \l__UsedOn_args_clist
+              {
+                \__UsedOn_Processor[##1]{#3}
+              }
+          }
         \IfBooleanTF{#1}{ \__UsedOn_origCref*{#3} }{ \__UsedOn_origCref{#3} }
       }
   }

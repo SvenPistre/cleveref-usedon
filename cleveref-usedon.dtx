@@ -493,35 +493,33 @@
 %
 %   \subsection{Options and requirements}
 %
-%	The following package is included in the \LaTeX{} kernel since 2020-10-01.
-%   Here, it is manually |\Require|'d for users with older \LaTeX{} versions.
-%   For such users the loading should have been aborted anyway.
+%	Below are the available package options.
 %    \begin{macrocode}
-\RequirePackage{xparse}
-%    \end{macrocode}
-%
-%	The following package options currently don't do anything.
-%    \begin{macrocode}
-\bool_new:N \g_@@_StandardBehaviour_bool
-\bool_gset_true:N \g_@@_StandardBehaviour_bool
-\DeclareOption{usedon}{
-    \OptionNotUsed
-    \bool_gset_true:N \g_@@_StandardBehaviour_bool
-}
-\DeclareOption{notusedon}{
-    \OptionNotUsed
-    \bool_gset_false:N \g_@@_StandardBehaviour_bool
-}
+
+\keys_define:nn { cleveref-usedon }
+  {
+    , Default     .tl_set:N   = \l_@@_default_tl
+    , Default     .initial:n  = { }
+    , Default     .value_required:n = true
+    , UsedOn      .meta:n     = { Default = UsedOn }
+    , usedon      .meta:n     = { Default = UsedOn }
+    , uo          .meta:n     = { Default = UsedOn }
+    , UsedBy      .meta:n     = { Default = UsedBy }
+    , usedby      .meta:n     = { Default = UsedBy }
+    , ub          .meta:n     = { Default = UsedBy }
+    , UsedByAndOn .meta:n     = { Default = UsedByAndOn }
+    , usedbyandon .meta:n     = { Default = UsedByAndOn }
+    , ubao        .meta:n     = { Default = UsedByAndOn }
+
 %    \end{macrocode}
 %
 %	All other package options get passed on to \pkg{cleveref} which is the base for the current package here.
 %    \begin{macrocode}
-\DeclareOption*{
-    \PackageInfo{cleveref-usedon}
-        {Passing~option~'\CurrentOption'~to~cleveref}
-    \PassOptionsToPackage{\CurrentOption}{cleveref}
-}
-\ProcessOptions*
+    , unknown    .code:n     =
+        { \PassOptionsToPackage { \CurrentOption } { cleveref } }
+  }
+\ProcessKeyOptions [ cleveref-usedon ]
+
 \RequirePackage{cleveref}[2018/03/27]
 %    \end{macrocode}
 %
@@ -854,6 +852,7 @@
     \IfValueTF { #2 }
       {
         \clist_set:Nn \l_@@_args_clist { #2 }
+        \clist_put_left:No \l_@@_args_clist { \l_@@_default_tl }
         \clist_map_inline:Nn \l_@@_args_clist
           {
             \str_case:xnT { \str_foldcase:n { ##1 } }
@@ -879,6 +878,15 @@
           }
       }
       {
+        \tl_if_blank:VF \l_@@_default_tl
+          {
+            \clist_clear:N \l_@@_args_clist
+            \clist_put_left:No \l_@@_args_clist { \l_@@_default_tl }
+            \clist_map_inline:Nn \l_@@_args_clist
+              {
+                \@@_Processor[##1]{#3}
+              }
+          }
         \IfBooleanTF{#1}{ \@@_origcref*{#3} }{ \@@_origcref{#3} }
       }
   }
@@ -894,6 +902,7 @@
     \IfValueTF { #2 }
       {
         \clist_set:Nn \l_@@_args_clist { #2 }
+        \clist_put_left:No \l_@@_args_clist { \l_@@_default_tl }
         \clist_map_inline:Nn \l_@@_args_clist
           {
             \str_case:xnT { \str_foldcase:n { ##1 } }
@@ -919,6 +928,15 @@
           }
       }
       {
+        \tl_if_blank:VF \l_@@_default_tl
+          {
+            \clist_clear:N \l_@@_args_clist
+            \clist_put_left:No \l_@@_args_clist { \l_@@_default_tl }
+            \clist_map_inline:Nn \l_@@_args_clist
+              {
+                \@@_Processor[##1]{#3}
+              }
+          }
         \IfBooleanTF{#1}{ \@@_origCref*{#3} }{ \@@_origCref{#3} }
       }
   }
