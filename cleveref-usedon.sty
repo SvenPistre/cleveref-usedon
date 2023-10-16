@@ -105,21 +105,24 @@
 \cs_new:Nn \__UsedOn_UsedOnMessage:n { }
 \cs_new:Nn \__UsedOn_UsedByMessage:n { }
 \cs_new:Nn \__UsedOn_UsedByAndOnMessage:nn { }
-\NewDocumentCommand \DefineUsedOnMessage { m }
+\NewDocumentCommand \UsedOnText { m } { \__UsedOn_UsedOnMessage:n { #1 } }
+\NewDocumentCommand \UsedByText { m } { \__UsedOn_UsedByMessage:n { #1 } }
+\NewDocumentCommand \UsedByAndOnText { m } { \__UsedOn_UsedByAndOnMessage:n { #1 } }
+\NewDocumentCommand \SetUsedOnText { m }
   {
     \cs_set:Nn \__UsedOn_UsedOnMessage:n { #1 }
   }
-\NewDocumentCommand \DefineUsedByMessage { m }
+\NewDocumentCommand \SetUsedByText { m }
   {
     \cs_set:Nn \__UsedOn_UsedByMessage:n { #1 }
   }
-\NewDocumentCommand \DefineUsedByAndOnMessage { m }
+\NewDocumentCommand \SetUsedByAndOnText { m }
   {
     \cs_set:Nn \__UsedOn_UsedByAndOnMessage:nn { #1 }
   }
 \RequirePackage{iflang}
 
-\DefineUsedOnMessage
+\SetUsedOnText
   {
     \IfLanguageName{english}
         { (Used~on~#1.) } {}
@@ -130,7 +133,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\DefineUsedByMessage
+\SetUsedByText
   {
     \IfLanguageName{english}
         { (Used~by~#1.) } {}
@@ -141,7 +144,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\DefineUsedByAndOnMessage
+\SetUsedByAndOnText
   {
     \IfLanguageName{english}
         { (Used~by~#1~on~#2.) } {}

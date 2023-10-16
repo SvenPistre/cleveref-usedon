@@ -42,6 +42,7 @@
 \usepackage{amsthm}
 \usepackage{thmtools}
 \usepackage{hyperref}
+\usepackage{embrac}
 \usepackage[capitalise]{cleveref-usedon}[2023/03/29]
 \declaretheorem[
 	numberwithin=section,
@@ -181,10 +182,19 @@
 %	\LaTeX{}'s referencing system (see Section 13 of \pkg{cleveref}'s
 %	documentation). Basically, \pkg{cleveref-usedon} must be loaded
 %	\emph{last} but definitely AFTER \pkg{hyperref}.
-%   \begin{function}{\cref, \Cref}
+%
+% Available package options includes |UsedOn|, |UsedBy|, |UsedByAndOn|
+% and the lower-cased or abbreviated version of them.
+% They are used for setting the default behavior in the document.
+% For example, if you use the package option |UsedOn|, then unless
+% explicitly specified otherwise, every \cs{cref}, \cs{Cref} and
+% \cs{labelcref} would automatically use the mode |UsedOn| (see below).
+%
+%   \begin{function}{\cref, \Cref, \labelcref}
 %       \begin{syntax}
 %           \cs{cref}\oarg{Option}\marg{LabelName}
 %           \cs{Cref}\oarg{Option}\marg{LabelName}
+%           \cs{labelcref}\oarg{Option}\marg{LabelName}
 %       \end{syntax}
 %   \end{function}
 %	The |\cref| macro can be called with options |UsedOn| (see \cref{sec:UsedOn}),
@@ -381,15 +391,43 @@
 %   and |\UsedByAndOnMessage|, e.g. as
 %	\begin{quote}
 %	\begin{verbatim}
-%   \RenewDocumentCommand{\UsedOnMessage}{ m }{
-%       \emph{(Will be cited on #1.)} \newline
-%   }
-%   \RenewDocumentCommand{\UsedByMessage}{ m }{
-%       \emph{(Will be applied in #1.)} \newline
-%   }
-%   \RenewDocumentCommand{\UsedByAndOnMessage}{ m m }{
-%       \emph{(Will be applied in #1 on #2.)} \newline
-%   }
+%   \RenewDocumentCommand \UsedOnMessage { m }
+%     {
+%       \emph{\UsedOnText{#1}} \\[.3\baselineskip]
+%     }
+%   \RenewDocumentCommand \UsedByMessage { m }
+%     {
+%       \emph{\UsedByText{#1}} \\[.3\baselineskip]
+%     }
+%   \RenewDocumentCommand \UsedByAndOnMessage { m }
+%     {
+%       \emph{\UsedByAndOnText{#1}} \\[.3\baselineskip]
+%     }
+%	\end{verbatim}
+%	\end{quote}
+%	\end{function}
+%
+%	\begin{function}{\SetUsedOnText, \SetUsedByText, \SetUsedByAndOnText}
+%      \begin{syntax}
+%           \cs{SetUsedOnText}\marg{Text with \#1}
+%           \cs{SetUsedByText}\marg{Text with \#1}
+%           \cs{SetUsedByAndOnText}\marg{Text with \#1 and \#2}
+%       \end{syntax}
+%	You may redefine the text of the standard messages via these three macros.
+% As an example, the default text for |UsedOn| is defined via
+%	\begin{quote}
+%	\begin{verbatim}
+%   \SetUsedOnText
+%     {
+%       \IfLanguageName{english}
+%           { (Used~on~#1.) } {}
+%       \IfLanguageName{french}
+%           { (Apparaît~en~#1.) } {}
+%       \IfLanguageName{ngerman}
+%           { (Wird~auf~#1.) } {}
+%       \IfLanguageName{spanish}
+%           { (Aparece~en~#1.) } {}
+%     }
 %	\end{verbatim}
 %	\end{quote}
 %	\end{function}
@@ -425,13 +463,15 @@
 %   \href{https://github.com/SvenPistre/cleveref-usedon/issues}{create a github issue} or
 %   \href{mailto:cleveref-usedon@sven-pistre.com?subject=[cleveref-usedon]}{send me an email}.
 %
-%	Let's just reference \cref[UsedOn]{thm:SqrtTwoIrrational} one last time for the fun of it,
+%   \bigskip
+%	  Let's just reference \cref[UsedOn]{thm:SqrtTwoIrrational} one last time for the fun of it,
 %   check \cpageref{thm:SqrtTwoIrrational} again to see the effect to the reference list
 %   in the header of \cref{thm:SqrtTwoIrrational}.
 %
 % \end{documentation}
 %
 %
+% \clearpage
 % \begin{implementation}
 %
 %
@@ -581,34 +621,39 @@
 %    \end{macrocode}
 %\end{variable}
 %
+%    \begin{macrocode}
 \cs_new:Nn \@@_UsedOnMessage:n { }
 \cs_new:Nn \@@_UsedByMessage:n { }
 \cs_new:Nn \@@_UsedByAndOnMessage:nn { }
+\NewDocumentCommand \UsedOnText { m } { \@@_UsedOnMessage:n { #1 } }
+\NewDocumentCommand \UsedByText { m } { \@@_UsedByMessage:n { #1 } }
+\NewDocumentCommand \UsedByAndOnText { m } { \@@_UsedByAndOnMessage:n { #1 } }
+%    \end{macrocode}
 %
-%\begin{macro}{\DefineUsedOnMessage}
+%\begin{macro}{\SetUsedOnText}
 %
 %    \begin{macrocode}
-\NewDocumentCommand \DefineUsedOnMessage { m }
+\NewDocumentCommand \SetUsedOnText { m }
   {
     \cs_set:Nn \@@_UsedOnMessage:n { #1 }
   }
 %    \end{macrocode}
 %\end{macro}
 %
-%\begin{macro}{\DefineUsedByMessage}
+%\begin{macro}{\SetUsedByText}
 %
 %    \begin{macrocode}
-\NewDocumentCommand \DefineUsedByMessage { m }
+\NewDocumentCommand \SetUsedByText { m }
   {
     \cs_set:Nn \@@_UsedByMessage:n { #1 }
   }
 %    \end{macrocode}
 %\end{macro}
 %
-%\begin{macro}{\DefineUsedByAndOnMessage}
+%\begin{macro}{\SetUsedByAndOnText}
 %
 %    \begin{macrocode}
-\NewDocumentCommand \DefineUsedByAndOnMessage { m }
+\NewDocumentCommand \SetUsedByAndOnText { m }
   {
     \cs_set:Nn \@@_UsedByAndOnMessage:nn { #1 }
   }
@@ -618,7 +663,7 @@
 %    \begin{macrocode}
 \RequirePackage{iflang}
 
-\DefineUsedOnMessage
+\SetUsedOnText
   {
     \IfLanguageName{english}
         { (Used~on~#1.) } {}
@@ -629,7 +674,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\DefineUsedByMessage
+\SetUsedByText
   {
     \IfLanguageName{english}
         { (Used~by~#1.) } {}
@@ -640,7 +685,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\DefineUsedByAndOnMessage
+\SetUsedByAndOnText
   {
     \IfLanguageName{english}
         { (Used~by~#1~on~#2.) } {}
