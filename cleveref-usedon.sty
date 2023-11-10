@@ -71,7 +71,7 @@
 
 \keys_define:nn { cleveref-usedon }
   {
-    , Default     .tl_set:N   = \l__UsedOn_default_tl
+    , Default     .tl_set:N   = \l__UsedOn_default_package_option_tl
     , Default     .initial:n  = { }
     , Default     .value_required:n = true
     , UsedOn      .meta:n     = { Default = UsedOn }
@@ -102,27 +102,27 @@
 \prop_new:N \g__UsedOn_kv_prop
 \clist_new:N \g__UsedOn_Options_clist
 \clist_set:Nn \g__UsedOn_Options_clist { UsedOn, UsedBy, UsedByAndOn }
-\cs_new:Nn \__UsedOn_UsedOnMessage:n { }
-\cs_new:Nn \__UsedOn_UsedByMessage:n { }
-\cs_new:Nn \__UsedOn_UsedByAndOnMessage:nn { }
-\NewDocumentCommand \UsedOnText { m } { \__UsedOn_UsedOnMessage:n { #1 } }
-\NewDocumentCommand \UsedByText { m } { \__UsedOn_UsedByMessage:n { #1 } }
-\NewDocumentCommand \UsedByAndOnText { m } { \__UsedOn_UsedByAndOnMessage:n { #1 } }
-\NewDocumentCommand \SetUsedOnText { m }
+\cs_new:Nn \__UsedOn_UsedOnMessageText:n { }
+\cs_new:Nn \__UsedOn_UsedByMessageText:n { }
+\cs_new:Nn \__UsedOn_UsedByAndOnMessageText:nn { }
+\NewDocumentCommand \UsedOnMessageText { m } { \__UsedOn_UsedOnMessageText:n { #1 } }
+\NewDocumentCommand \UsedByMessageText { m } { \__UsedOn_UsedByMessageText:n { #1 } }
+\NewDocumentCommand \UsedByAndOnMessageText { m m } { \__UsedOn_UsedByAndOnMessageText:nn { #1 } { #2 } }
+\NewDocumentCommand \SetUsedOnMessageText { m }
   {
-    \cs_set:Nn \__UsedOn_UsedOnMessage:n { #1 }
+    \cs_set:Nn \__UsedOn_UsedOnMessageText:n { #1 }
   }
-\NewDocumentCommand \SetUsedByText { m }
+\NewDocumentCommand \SetUsedByMessageText { m }
   {
-    \cs_set:Nn \__UsedOn_UsedByMessage:n { #1 }
+    \cs_set:Nn \__UsedOn_UsedByMessageText:n { #1 }
   }
-\NewDocumentCommand \SetUsedByAndOnText { m }
+\NewDocumentCommand \SetUsedByAndOnMessageText { m }
   {
-    \cs_set:Nn \__UsedOn_UsedByAndOnMessage:nn { #1 }
+    \cs_set:Nn \__UsedOn_UsedByAndOnMessageText:nn { #1 }
   }
 \RequirePackage{iflang}
 
-\SetUsedOnText
+\SetUsedOnMessageText
   {
     \IfLanguageName{english}
         { (Used~on~#1.) } {}
@@ -133,7 +133,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\SetUsedByText
+\SetUsedByMessageText
   {
     \IfLanguageName{english}
         { (Used~by~#1.) } {}
@@ -144,7 +144,7 @@
     \IfLanguageName{spanish}
         { (Aparece~en~#1.) } {}
   }
-\SetUsedByAndOnText
+\SetUsedByAndOnMessageText
   {
     \IfLanguageName{english}
         { (Used~by~#1~on~#2.) } {}
@@ -158,15 +158,15 @@
 
 \NewDocumentCommand \UsedOnMessage { m }
   {
-    \emph{ \__UsedOn_UsedOnMessage:n { #1 } } \\[.3\baselineskip]
+    \emph{ \__UsedOn_UsedOnMessageText:n { #1 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \UsedByMessage { m }
   {
-    \emph{ \__UsedOn_UsedByMessage:n { #1 } } \\[.3\baselineskip]
+    \emph{ \__UsedOn_UsedByMessageText:n { #1 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \UsedByAndOnMessage { m m }
   {
-    \emph{ \__UsedOn_UsedByAndOnMessage:nn { #1 } { #2 } } \\[.3\baselineskip]
+    \emph{ \__UsedOn_UsedByAndOnMessageText:nn { #1 } { #2 } } \\[.3\baselineskip]
   }
 \NewDocumentCommand \__UsedOn_Printer { m m }
   {
@@ -286,18 +286,18 @@
         }
     }
   }
-\bool_new:N \l__UsedOn_already_specified_bool
-\clist_new:N \l__UsedOn_args_clist
+\bool_new:N \l__UsedOn_option_has_been_chosen_bool
+\clist_new:N \l__UsedOn_local_options_clist
 \cs_new:Nn \__UsedOn_define_from_orig:NN
   {
     \NewDocumentCommand #1 { s o m }
       {
         \IfValueTF { ##2 }
           {
-            \bool_set_false:N \l__UsedOn_already_specified_bool
-            \clist_set:Nn \l__UsedOn_args_clist { ##2 }
-            \clist_put_right:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
-            \clist_map_inline:Nn \l__UsedOn_args_clist
+            \bool_set_false:N \l__UsedOn_option_has_been_chosen_bool
+            \clist_set:Nn \l__UsedOn_local_options_clist { ##2 }
+            \clist_put_right:No \l__UsedOn_local_options_clist { \l__UsedOn_default_package_option_tl }
+            \clist_map_inline:Nn \l__UsedOn_local_options_clist
               {
                 \str_case:xnT { \str_foldcase:n { ####1 } }
                   {
@@ -309,28 +309,28 @@
                     {ubao}        {}
                   }
                   {
-                    \clist_remove_all:Nn \l__UsedOn_args_clist { ####1 }
-                    \bool_if:NF \l__UsedOn_already_specified_bool
+                    \clist_remove_all:Nn \l__UsedOn_local_options_clist { ####1 }
+                    \bool_if:NF \l__UsedOn_option_has_been_chosen_bool
                       {
                         \__UsedOn_Processor[####1]{##3}
                       }
-                    \bool_set_true:N \l__UsedOn_already_specified_bool
+                    \bool_set_true:N \l__UsedOn_option_has_been_chosen_bool
                   }
               }
-            \clist_if_empty:NTF \l__UsedOn_args_clist
+            \clist_if_empty:NTF \l__UsedOn_local_options_clist
               {
                 \IfBooleanTF{##1}{ #2*{##3} }{ #2{##3} }
               }
               {
-                \IfBooleanTF{##1}{ #2*[\l__UsedOn_args_clist]{##3} }{ #2[\l__UsedOn_args_clist]{##3} }
+                \IfBooleanTF{##1}{ #2*[\l__UsedOn_local_options_clist]{##3} }{ #2[\l__UsedOn_local_options_clist]{##3} }
               }
           }
           {
-            \tl_if_blank:VF \l__UsedOn_default_tl
+            \tl_if_blank:VF \l__UsedOn_default_package_option_tl
               {
-                \clist_clear:N \l__UsedOn_args_clist
-                \clist_put_right:No \l__UsedOn_args_clist { \l__UsedOn_default_tl }
-                \clist_map_inline:Nn \l__UsedOn_args_clist
+                \clist_clear:N \l__UsedOn_local_options_clist
+                \clist_put_right:No \l__UsedOn_local_options_clist { \l__UsedOn_default_package_option_tl }
+                \clist_map_inline:Nn \l__UsedOn_local_options_clist
                   {
                     \__UsedOn_Processor[####1]{##3}
                   }
